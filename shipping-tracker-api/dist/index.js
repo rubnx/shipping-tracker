@@ -10,6 +10,8 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const tracking_1 = require("./routes/tracking");
 const environment_1 = require("./config/environment");
+const database_1 = require("./config/database");
+const migrator_1 = require("./database/migrator");
 // Validate environment variables
 (0, environment_1.validateEnvironment)();
 const app = (0, express_1.default)();
@@ -57,11 +59,30 @@ app.use('*', (req, res) => {
 });
 // Error handling middleware
 app.use(errorHandler_1.errorHandler);
-// Start server
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/health`);
-    console.log(`🔍 API base URL: http://localhost:${PORT}/api`);
-});
+// Initialize database and start server
+const startServer = async () => {
+    try {
+        // Test database connection
+        const dbConnected = await (0, database_1.testConnection)();
+        if (!dbConnected) {
+            console.error('❌ Failed to connect to database. Server will not start.');
+            process.exit(1);
+        }
+        // Run database migrations
+        await (0, migrator_1.runMigrations)();
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(`📊 Health check: http://localhost:${PORT}/health`);
+            console.log(`🔍 API base URL: http://localhost:${PORT}/api`);
+        });
+    }
+    catch (error) {
+        console.error('❌ Failed to start server:', error);
+        process.exit(1);
+    }
+};
+// Start the server
+startServer();
 exports.default = app;
 //# sourceMappingURL=index.js.map

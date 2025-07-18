@@ -5,6 +5,8 @@ import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middleware/errorHandler';
 import { trackingRoutes } from './routes/tracking';
 import { config, validateEnvironment } from './config/environment';
+import { testConnection } from './config/database';
+import { runMigrations } from './database/migrator';
 
 // Validate environment variables
 validateEnvironment();
@@ -64,11 +66,32 @@ app.use('*', (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔍 API base URL: http://localhost:${PORT}/api`);
-});
+// Initialize database and start server
+const startServer = async () => {
+  try {
+    // Test database connection
+    const dbConnected = await testConnection();
+    if (!dbConnected) {
+      console.error('❌ Failed to connect to database. Server will not start.');
+      process.exit(1);
+    }
+
+    // Run database migrations
+    await runMigrations();
+
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Health check: http://localhost:${PORT}/health`);
+      console.log(`🔍 API base URL: http://localhost:${PORT}/api`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+// Start the server
+startServer();
 
 export default app;
