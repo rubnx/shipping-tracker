@@ -1,555 +1,122 @@
-# Shipping Tracking App - Development Instructions
-
-## Project Overview
-Build a modern, minimal shipping tracking application that allows users to track shipments using booking numbers, container numbers, or bill of lading numbers. The app should provide real-time tracking information with a clean, professional interface similar to Flexport or Freightos.
-
-## Core Features & Requirements
-
-### 1. User Interface Design
-- **Design Philosophy**: Clean, minimal, modern interface
-- **Color Scheme**: Use neutral colors with blue accents (similar to Flexport's palette)
-- **Typography**: Modern, readable fonts (Inter, Poppins, or similar)
-- **Layout**: Card-based design with plenty of whitespace
-- **Responsive**: Mobile-first approach, works on all devices
-
-### 2. Input & Search Functionality
-- **Search Types**: Support for:
-  - Booking Number (BKG)
-  - Container Number (CNTR)
-  - Bill of Lading (BOL)
-- **Input Validation**: Real-time validation with clear error messages
-- **Auto-detection**: Automatically detect input type based on format
-- **Search History**: Store recent searches (local storage)
-
-### 3. Tracking Information Display
-
-#### Status Timeline
-- Visual timeline showing:
-  - Booking confirmed
-  - Container loaded
-  - Departed origin port
-  - In transit
-  - Arrived destination port
-  - Container discharged
-  - Available for pickup
-  - Delivered
-- Each status with timestamp and location
-- Current status highlighted
-- Progress bar showing completion percentage
-
-#### Shipment Details Card
-- **Basic Info**: 
-  - Tracking number
-  - Service type (FCL/LCL)
-  - Carrier/Shipping line
-  - Vessel name and voyage
-- **Route Info**:
-  - Origin port and city
-  - Destination port and city
-  - Estimated/Actual departure
-  - Estimated/Actual arrival
-- **Container Details**:
-  - Container number(s)
-  - Size and type (20ft, 40ft, etc.)
-  - Seal number
-  - Weight and dimensions
-
-#### Interactive Map
-- **Map Provider**: Use Mapbox or Google Maps
-- **Route Visualization**: Show shipping route with:
-  - Origin and destination markers
-  - Current vessel position (if available)
-  - Port stops along the route
-  - Estimated arrival zones
-- **Real-time Updates**: Update vessel position periodically
-- **Info Windows**: Click markers for port/location details
-
-### 4. API Integration Strategy
-
-#### Primary APIs to Integrate
-1. **SeaRates API** - Global shipping data
-2. **Portcast API** - Port and vessel tracking
-3. **MarineTraffic API** - Vessel positions and AIS data
-4. **Freightos API** - Multi-carrier tracking
-5. **Individual Carrier APIs**:
-   - Maersk API
-   - CMA CGM API
-   - COSCO API
-   - Hapag-Lloyd API
-   - MSC API
-
-#### API Management
-- **Fallback System**: Try multiple APIs if primary fails
-- **Rate Limiting**: Implement proper rate limiting
-- **Caching**: Cache responses to reduce API calls
-- **Error Handling**: Graceful degradation when APIs are unavailable
-
-### 5. Loading States & Feedback
-
-#### Loading Indicators
-- **Search Loading**: Skeleton cards while fetching data
-- **Map Loading**: Loading spinner on map container
-- **Status Updates**: Subtle loading indicators for refreshes
-
-#### Progress Feedback
-- **Search Progress**: "Searching multiple carriers..."
-- **Data Fetching**: "Fetching latest updates..."
-- **Map Loading**: "Loading route information..."
-
-#### Error States
-- **Not Found**: "Shipment not found. Please check your tracking number."
-- **API Error**: "Unable to fetch updates. Trying alternative sources..."
-- **Network Error**: "Connection issues. Please try again."
-
-### 6. Technical Implementation
-
-#### Frontend Framework
-- **React** with TypeScript
-- **State Management**: Zustand or Redux Toolkit
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React or Heroicons
-- **Maps**: Mapbox GL JS or Google Maps
-
-#### Backend Requirements
-- **Node.js** with Express or **Next.js** API routes
-- **Database**: PostgreSQL or MongoDB for caching
-- **Queue System**: Redis for managing API requests
-- **Authentication**: JWT for API access management
-
-#### Data Structure
-```typescript
-interface ShipmentTracking {
-  trackingNumber: string;
-  trackingType: 'booking' | 'container' | 'bol';
-  carrier: string;
-  service: 'FCL' | 'LCL';
-  status: ShipmentStatus;
-  timeline: TimelineEvent[];
-  route: RouteInfo;
-  containers: Container[];
-  vessel: VesselInfo;
-  documents: Document[];
-}
-
-interface TimelineEvent {
-  timestamp: Date;
-  status: string;
-  location: string;
-  description: string;
-  isCompleted: boolean;
-}
-```
-
-### 7. User Experience Enhancements
-
-#### Search Experience
-- **Auto-complete**: Suggest recent searches
-- **Format Help**: Show example formats for each tracking type
-- **Batch Search**: Allow multiple tracking numbers
-
-#### Information Hierarchy
-- **Primary Info**: Status, ETA, current location
-- **Secondary Info**: Container details, vessel info
-- **Tertiary Info**: Historical events, documents
-
-#### Accessibility
-- **Screen Reader Support**: Proper ARIA labels
-- **Keyboard Navigation**: Full keyboard accessibility
-- **High Contrast**: Support for high contrast mode
-
-### 8. Performance Optimization
-
-#### Frontend Performance
-- **Code Splitting**: Lazy load components
-- **Image Optimization**: Optimize map tiles and icons
-- **Caching**: Cache API responses and static assets
-
-#### Backend Performance
-- **Database Indexing**: Index tracking numbers
-- **API Caching**: Cache responses for 5-15 minutes
-- **Connection Pooling**: Efficient database connections
-
-### 9. Security Considerations
-
-#### API Security
-- **Rate Limiting**: Prevent abuse
-- **Input Validation**: Sanitize all inputs
-- **API Keys**: Secure storage and rotation
-- **CORS**: Proper CORS configuration
-
-#### Data Privacy
-- **No PII Storage**: Don't store sensitive shipment data
-- **Secure Transmission**: HTTPS only
-- **Session Management**: Secure session handling
-
-### 10. Development Phases
-
-#### Phase 1: Core MVP
-- Basic search functionality
-- Simple status display
-- One primary API integration
-- Basic responsive design
-
-#### Phase 2: Enhanced Features
-- Interactive map
-- Multiple API integration
-- Timeline visualization
-- Advanced error handling
-
-#### Phase 3: Polish & Optimization
-- Advanced animations
-- Performance optimization
-- Additional carrier support
-- Analytics integration
-
-## Sample Component Structure
-
-```
-src/
-├── components/
-│   ├── SearchBar/
-│   ├── TrackingResults/
-│   ├── StatusTimeline/
-│   ├── ShipmentMap/
-│   ├── LoadingStates/
-│   └── ErrorBoundary/
-├── services/
-│   ├── api/
-│   ├── tracking/
-│   └── cache/
-├── hooks/
-├── types/
-├── utils/
-└── styles/
-```
-
-## Key Success Metrics
-- **Performance**: Page load under 2 seconds
-- **Accuracy**: 95%+ successful tracking lookups
-- **Usability**: Intuitive interface requiring no training
-- **Reliability**: 99.9% uptime with graceful fallbacks
-
-## Additional Recommendations
-
-1. **Progressive Web App**: Make it installable on mobile devices
-2. **Push Notifications**: Alert users of status changes
-3. **Export Options**: PDF reports, email summaries
-4. **Multi-language**: Support for major shipping languages
-5. **Dark Mode**: Professional dark theme option
-6. **Analytics**: Track user behavior and API performance
-7. **Feedback System**: Allow users to report issues
-8. **Documentation**: Comprehensive API documentation
-
-This specification provides a solid foundation for building a professional shipping tracking application that rivals industry leaders while maintaining excellent user experience and technical performance.
-
-## Additional Recommendations
-
-1. **Progressive Web App**: Make it installable on mobile devices
-2. **Push Notifications**: Alert users of status changes
-3. **Export Options**: PDF reports, email summaries
-4. **Multi-language**: Support for major shipping languages
-5. **Dark Mode**: Professional dark theme option
-6. **Analytics**: Track user behavior and API performance
-7. **Feedback System**: Allow users to report issues
-8. **Documentation**: Comprehensive API documentation
-
-## Free Development Stack
-
-**Frontend (Free):**
-- React with Vite (faster than Create React App)
-- Tailwind CSS for styling
-- Leaflet for mapping (if avoiding paid map services)
-- Vercel for hosting (free tier)
-
-**Backend (Free):**
-- Next.js API routes (deployed on Vercel)
-- Supabase for database (free tier)
-- Upstash Redis for caching (free tier)
-- Planetscale for MySQL (free tier alternative)
-
-**Free Services:**
-- GitHub for version control
-- Vercel for deployment
-- Cloudflare for CDN (free tier)
-- Sentry for error tracking (free tier)
-
-## Budget-Friendly Scaling Plan
-
-**Month 1-2**: Free APIs only, validate concept
-**Month 3-4**: Add freemium APIs, implement caching
-**Month 5-6**: Scale to paid tiers based on usage
-**Month 7+**: Consider premium APIs for advanced features# Shipping Tracking App - Development Instructions
-
-## Project Overview
-Build a modern, minimal shipping tracking application that allows users to track shipments using booking numbers, container numbers, or bill of lading numbers. The app should provide real-time tracking information with a clean, professional interface similar to Flexport or Freightos.
-
-## Core Features & Requirements
-
-### 1. User Interface Design
-- **Design Philosophy**: Clean, minimal, modern interface
-- **Color Scheme**: Use neutral colors with blue accents (similar to Flexport's palette)
-- **Typography**: Modern, readable fonts (Inter, Poppins, or similar)
-- **Layout**: Card-based design with plenty of whitespace
-- **Responsive**: Mobile-first approach, works on all devices
-
-### 2. Input & Search Functionality
-- **Search Types**: Support for:
-  - Booking Number (BKG)
-  - Container Number (CNTR)
-  - Bill of Lading (BOL)
-- **Input Validation**: Real-time validation with clear error messages
-- **Auto-detection**: Automatically detect input type based on format
-- **Search History**: Store recent searches (local storage)
-
-### 3. Tracking Information Display
-
-#### Status Timeline
-- Visual timeline showing:
-  - Booking confirmed
-  - Container loaded
-  - Departed origin port
-  - In transit
-  - Arrived destination port
-  - Container discharged
-  - Available for pickup
-  - Delivered
-- Each status with timestamp and location
-- Current status highlighted
-- Progress bar showing completion percentage
-
-#### Shipment Details Card
-- **Basic Info**: 
-  - Tracking number
-  - Service type (FCL/LCL)
-  - Carrier/Shipping line
-  - Vessel name and voyage
-- **Route Info**:
-  - Origin port and city
-  - Destination port and city
-  - Estimated/Actual departure
-  - Estimated/Actual arrival
-- **Container Details**:
-  - Container number(s)
-  - Size and type (20ft, 40ft, etc.)
-  - Seal number
-  - Weight and dimensions
-
-#### Interactive Map
-- **Map Provider**: Use Mapbox or Google Maps
-- **Route Visualization**: Show shipping route with:
-  - Origin and destination markers
-  - Current vessel position (if available)
-  - Port stops along the route
-  - Estimated arrival zones
-- **Real-time Updates**: Update vessel position periodically
-- **Info Windows**: Click markers for port/location details
-
-### 4. API Integration Strategy
-
-#### Free/Freemium APIs to Integrate
-
-**Primary Free Options:**
-1. **USPS Web Tools API** - Completely free for USPS tracking
-2. **FedEx API** - Free tier available with rate limits
-3. **UPS API** - Free tier for basic tracking
-4. **DHL API** - Free tier with limitations
-5. **Ship24 API** - Free tier with 100 requests/month for global tracking
-6. **TrackingMore API** - Free tier with 100 requests/month
-7. **AfterShip API** - Free tier with 100 shipments/month
-
-**Maritime/Container Tracking (Free Tiers):**
-1. **MarineTraffic API** - Free tier available for vessel data
-2. **Datalastic API** - Free tier for vessel tracking and AIS data
-3. **OpenShipData API** - Free marine vessel data
-4. **Individual Carrier APIs** (often free):
-   - Maersk API (some endpoints free)
-   - CMA CGM API (limited free access)
-   - COSCO API (basic tracking free)
-
-**Mapping (Free Options):**
-1. **OpenStreetMap with Leaflet** - Completely free
-2. **Mapbox** - Free tier: 50,000 requests/month
-3. **Google Maps** - Free tier: $200 credit monthly
-
-#### Free API Strategy & Implementation
-
-**Phase 1: Start with Free APIs**
-- USPS Web Tools API - completely free after simple registration
-- FedEx, UPS, DHL free tiers for basic tracking
-- Ship24 API for global tracking with free tier
-- OpenShipData API for marine vessel data
-
-**Phase 2: Add Maritime APIs**
-- MarineTraffic API for container tracking with free tier
-- Datalastic API for vessel tracking and AIS data
-- Individual carrier APIs (many have free basic tiers)
-
-**Phase 3: Scale with Freemium**
-- TrackingMore API for bulk tracking data
-- AfterShip API for advanced features
-- Upgrade to paid tiers as needed
-
-**Cost-Effective Approach:**
-- Start with free tiers to validate the concept
-- Implement intelligent caching to maximize free quotas
-- Use web scraping as fallback (within legal/TOS limits)
-- Scale to paid tiers only when revenue justifies costs
-
-### 5. Loading States & Feedback
-
-#### Loading Indicators
-- **Search Loading**: Skeleton cards while fetching data
-- **Map Loading**: Loading spinner on map container
-- **Status Updates**: Subtle loading indicators for refreshes
-
-#### Progress Feedback
-- **Search Progress**: "Searching multiple carriers..."
-- **Data Fetching**: "Fetching latest updates..."
-- **Map Loading**: "Loading route information..."
-
-#### Error States
-- **Not Found**: "Shipment not found. Please check your tracking number."
-- **API Error**: "Unable to fetch updates. Trying alternative sources..."
-- **Network Error**: "Connection issues. Please try again."
-
-### 6. Technical Implementation
-
-#### Frontend Framework
-- **React** with TypeScript
-- **State Management**: Zustand or Redux Toolkit
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React or Heroicons
-- **Maps**: Mapbox GL JS or Google Maps
-
-#### Backend Requirements
-- **Node.js** with Express or **Next.js** API routes
-- **Database**: PostgreSQL or MongoDB for caching
-- **Queue System**: Redis for managing API requests
-- **Authentication**: JWT for API access management
-
-#### Data Structure
-```typescript
-interface ShipmentTracking {
-  trackingNumber: string;
-  trackingType: 'booking' | 'container' | 'bol';
-  carrier: string;
-  service: 'FCL' | 'LCL';
-  status: ShipmentStatus;
-  timeline: TimelineEvent[];
-  route: RouteInfo;
-  containers: Container[];
-  vessel: VesselInfo;
-  documents: Document[];
-}
-
-interface TimelineEvent {
-  timestamp: Date;
-  status: string;
-  location: string;
-  description: string;
-  isCompleted: boolean;
-}
-```
-
-### 7. User Experience Enhancements
-
-#### Search Experience
-- **Auto-complete**: Suggest recent searches
-- **Format Help**: Show example formats for each tracking type
-- **Batch Search**: Allow multiple tracking numbers
-
-#### Information Hierarchy
-- **Primary Info**: Status, ETA, current location
-- **Secondary Info**: Container details, vessel info
-- **Tertiary Info**: Historical events, documents
-
-#### Accessibility
-- **Screen Reader Support**: Proper ARIA labels
-- **Keyboard Navigation**: Full keyboard accessibility
-- **High Contrast**: Support for high contrast mode
-
-### 8. Performance Optimization
-
-#### Frontend Performance
-- **Code Splitting**: Lazy load components
-- **Image Optimization**: Optimize map tiles and icons
-- **Caching**: Cache API responses and static assets
-
-#### Backend Performance
-- **Database Indexing**: Index tracking numbers
-- **API Caching**: Cache responses for 5-15 minutes
-- **Connection Pooling**: Efficient database connections
-
-### 9. Security Considerations
-
-#### API Security
-- **Rate Limiting**: Prevent abuse
-- **Input Validation**: Sanitize all inputs
-- **API Keys**: Secure storage and rotation
-- **CORS**: Proper CORS configuration
-
-#### Data Privacy
-- **No PII Storage**: Don't store sensitive shipment data
-- **Secure Transmission**: HTTPS only
-- **Session Management**: Secure session handling
-
-### 10. Development Phases
-
-#### Phase 1: Core MVP
-- Basic search functionality
-- Simple status display
-- One primary API integration
-- Basic responsive design
-
-#### Phase 2: Enhanced Features
-- Interactive map
-- Multiple API integration
-- Timeline visualization
-- Advanced error handling
-
-#### Phase 3: Polish & Optimization
-- Advanced animations
-- Performance optimization
-- Additional carrier support
-- Analytics integration
-
-## Sample Component Structure
-
-```
-src/
-├── components/
-│   ├── SearchBar/
-│   ├── TrackingResults/
-│   ├── StatusTimeline/
-│   ├── ShipmentMap/
-│   ├── LoadingStates/
-│   └── ErrorBoundary/
-├── services/
-│   ├── api/
-│   ├── tracking/
-│   └── cache/
-├── hooks/
-├── types/
-├── utils/
-└── styles/
-```
-
-## Key Success Metrics
-- **Performance**: Page load under 2 seconds
-- **Accuracy**: 95%+ successful tracking lookups
-- **Usability**: Intuitive interface requiring no training
-- **Reliability**: 99.9% uptime with graceful fallbacks
-
-#### Free Alternative: Web Scraping Approach
-If API limits are restrictive, consider ethical web scraping:
-- **Carrier Websites**: Many carriers provide tracking pages that can be scraped
-- **Tools**: Use Puppeteer or Playwright for dynamic content
-- **Respect**: Follow robots.txt and implement delays
-- **Legal**: Ensure compliance with terms of service
-- **Backup**: Use as fallback when APIs fail or hit limits
-
-**Free Mapping Solutions:**
-- **OpenStreetMap + Leaflet**: Completely free mapping
-- **Mapbox Free Tier**: 50,000 requests/month
-- **Google Maps Free Tier**: $200/month credit
+# Requirements Document
+
+## Introduction
+
+This document outlines the requirements for a modern shipping tracking application that allows users to track shipments using various tracking numbers. The application will provide real-time tracking information with a clean, professional interface similar to industry leaders like Flexport or Freightos.
+
+## Requirements
+
+### Requirement 1
+
+**User Story:** As a user, I want to search for shipments using different tracking number types, so that I can track packages regardless of which identifier I have.
+
+#### Acceptance Criteria
+
+1. WHEN a user enters a booking number THEN the system SHALL accept and process the booking number format
+2. WHEN a user enters a container number THEN the system SHALL accept and process the container number format  
+3. WHEN a user enters a bill of lading number THEN the system SHALL accept and process the bill of lading format
+4. WHEN a user enters an invalid tracking number format THEN the system SHALL display clear error messages with format examples
+5. WHEN a user starts typing THEN the system SHALL automatically detect the tracking number type based on format patterns
+
+### Requirement 2
+
+**User Story:** As a user, I want to see comprehensive tracking information in an organized layout, so that I can quickly understand my shipment's current status and details.
+
+#### Acceptance Criteria
+
+1. WHEN tracking data is retrieved THEN the system SHALL display a visual timeline showing all shipment milestones
+2. WHEN displaying the timeline THEN the system SHALL highlight the current status and show completion percentage
+3. WHEN showing shipment details THEN the system SHALL display basic info including tracking number, service type, carrier, and vessel information
+4. WHEN presenting route information THEN the system SHALL show origin/destination ports, departure/arrival times
+5. WHEN displaying container details THEN the system SHALL show container numbers, sizes, seal numbers, and dimensions
+
+### Requirement 3
+
+**User Story:** As a user, I want to see my shipment's route on an interactive map, so that I can visualize the shipping journey and current location.
+
+#### Acceptance Criteria
+
+1. WHEN shipment data includes route information THEN the system SHALL display an interactive map with the shipping route
+2. WHEN showing the route THEN the system SHALL display origin and destination markers clearly
+3. IF vessel position data is available THEN the system SHALL show current vessel location on the map
+4. WHEN displaying port stops THEN the system SHALL show intermediate ports along the route
+5. WHEN a user clicks on map markers THEN the system SHALL display detailed information about that location
+
+### Requirement 4
+
+**User Story:** As a user, I want the application to work seamlessly across different devices, so that I can track shipments whether I'm on desktop or mobile.
+
+#### Acceptance Criteria
+
+1. WHEN accessing the application on mobile devices THEN the system SHALL display a mobile-optimized interface
+2. WHEN using the application on different screen sizes THEN the system SHALL maintain usability and readability
+3. WHEN interacting with the map on touch devices THEN the system SHALL support touch gestures for navigation
+4. WHEN viewing tracking information on small screens THEN the system SHALL prioritize essential information visibility
+
+### Requirement 5
+
+**User Story:** As a user, I want to receive clear feedback during searches and loading, so that I understand what the system is doing and when something goes wrong.
+
+#### Acceptance Criteria
+
+1. WHEN a search is initiated THEN the system SHALL display loading indicators with progress messages
+2. WHEN API calls are in progress THEN the system SHALL show skeleton loading states for content areas
+3. WHEN a tracking number is not found THEN the system SHALL display a clear "not found" message with suggestions
+4. WHEN API services are unavailable THEN the system SHALL show error messages and attempt alternative data sources
+5. WHEN network connectivity issues occur THEN the system SHALL display appropriate error messages with retry options
+
+### Requirement 6
+
+**User Story:** As a user, I want my recent searches to be remembered, so that I can quickly re-track shipments I've looked up before.
+
+#### Acceptance Criteria
+
+1. WHEN a user performs a successful search THEN the system SHALL store the tracking number in local search history
+2. WHEN a user starts typing in the search field THEN the system SHALL suggest recent searches as auto-complete options
+3. WHEN displaying search history THEN the system SHALL show the most recent searches first
+4. WHEN a user selects a recent search THEN the system SHALL immediately perform the tracking lookup
+
+### Requirement 7
+
+**User Story:** As a user, I want the application to integrate with multiple shipping carriers and APIs, so that I can track shipments from various providers in one place.
+
+#### Acceptance Criteria
+
+1. WHEN the system cannot find data from the primary API THEN the system SHALL attempt to retrieve data from alternative APIs
+2. WHEN multiple APIs return conflicting data THEN the system SHALL prioritize the most reliable source and indicate data source
+3. WHEN API rate limits are reached THEN the system SHALL implement caching to reduce redundant requests
+4. WHEN all APIs are unavailable THEN the system SHALL gracefully degrade and inform the user of limited functionality
+
+### Requirement 8
+
+**User Story:** As a user, I want the application to be accessible to users with disabilities, so that everyone can use the tracking functionality effectively.
+
+#### Acceptance Criteria
+
+1. WHEN using screen readers THEN the system SHALL provide proper ARIA labels for all interactive elements
+2. WHEN navigating with keyboard only THEN the system SHALL support full keyboard navigation through all features
+3. WHEN users require high contrast THEN the system SHALL support high contrast mode for better visibility
+4. WHEN displaying important information THEN the system SHALL not rely solely on color to convey meaning
+
+### Requirement 9
+
+**User Story:** As a user, I want the application to load quickly and perform well, so that I can get tracking information without delays.
+
+#### Acceptance Criteria
+
+1. WHEN the application loads THEN the system SHALL achieve initial page load in under 2 seconds
+2. WHEN displaying tracking results THEN the system SHALL cache API responses to improve subsequent load times
+3. WHEN loading large amounts of data THEN the system SHALL implement code splitting to load components on demand
+4. WHEN the application is used frequently THEN the system SHALL maintain 95%+ successful tracking lookups
+
+### Requirement 10
+
+**User Story:** As a user, I want my data to be secure and private, so that I can trust the application with my shipment information.
+
+#### Acceptance Criteria
+
+1. WHEN transmitting data THEN the system SHALL use HTTPS encryption for all communications
+2. WHEN storing user data THEN the system SHALL not persist sensitive shipment information beyond necessary caching
+3. WHEN handling API requests THEN the system SHALL implement rate limiting to prevent abuse
+4. WHEN processing user input THEN the system SHALL validate and sanitize all inputs to prevent security vulnerabilities
 
