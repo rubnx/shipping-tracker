@@ -11,6 +11,7 @@ import {
 } from '../../utils';
 import { FORMAT_EXAMPLES } from '../../types/constants';
 import { LoadingSpinner, ProgressIndicator } from '../LoadingStates';
+import { useIsMobile, useIsTouchDevice, useScreenReader } from '../../hooks';
 
 const SearchComponent: React.FC<SearchComponentProps> = ({
   onSearch,
@@ -32,6 +33,11 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  
+  // Responsive hooks
+  const isMobile = useIsMobile();
+  const isTouch = useIsTouchDevice();
+  const { announce } = useScreenReader();
 
   // Debounced validation function
   const debouncedValidation = debounce((query: string) => {
@@ -42,6 +48,13 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
         validationError: validation.isValid ? null : validation.error || null,
         detectedType: validation.detectedType || null,
       }));
+      
+      // Announce validation results to screen readers
+      if (validation.isValid && validation.detectedType) {
+        announce(`${getTrackingTypeDisplay(validation.detectedType)} detected`);
+      } else if (!validation.isValid && validation.error) {
+        announce(`Validation error: ${validation.error}`);
+      }
     } else {
       setState(prev => ({
         ...prev,
@@ -216,12 +229,24 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
               placeholder={placeholder}
               className={`input-field pr-12 ${
                 state.validationError ? 'border-red-500 focus:ring-red-500' : ''
-              } ${isLoading ? 'opacity-50' : ''}`}
+              } ${isLoading ? 'opacity-50' : ''} ${
+                isMobile ? 'text-base' : 'text-sm'
+              }`}
               disabled={isLoading}
+              autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
+              inputMode={isMobile ? 'text' : undefined}
               aria-describedby={
                 state.validationError ? 'search-error' : 
-                state.detectedType ? 'detected-type' : undefined
+                state.detectedType ? 'detected-type' : 'format-examples'
               }
+              aria-invalid={state.validationError ? 'true' : 'false'}
+              aria-expanded={state.showSuggestions}
+              aria-haspopup="listbox"
+              role="combobox"
+              aria-autocomplete="list"
             />
             
             {/* Search Button */}
@@ -245,16 +270,22 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
           {state.showSuggestions && filteredSuggestions.length > 0 && (
             <div
               ref={suggestionsRef}
-              className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-y-auto ${
+                isMobile ? 'max-h-48' : 'max-h-60'
+              }`}
+              role="listbox"
+              aria-label="Search suggestions"
             >
               {filteredSuggestions.map((suggestion, index) => (
                 <button
                   key={suggestion.trackingNumber}
                   type="button"
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className={`w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
+                  className={`w-full px-4 py-3 text-left hover:bg-gray-50 active:bg-gray-100 border-b border-gray-100 last:border-b-0 transition-colors duration-150 ${
                     index === state.selectedSuggestionIndex ? 'bg-primary-50' : ''
-                  }`}
+                  } ${isTouch ? 'touch-manipulation' : ''}`}
+                  role="option"
+                  aria-selected={index === state.selectedSuggestionIndex}
                 >
                   <div className="flex justify-between items-center">
                     <div>
@@ -298,12 +329,12 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
 
         {/* Format Examples */}
         {!state.query && (
-          <div className="text-sm text-gray-500">
+          <div id="format-examples" className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'}`}>
             <div className="font-medium mb-2">Supported formats:</div>
-            <div className="space-y-1">
-              <div>• Container: {FORMAT_EXAMPLES.container}</div>
-              <div>• Booking: {FORMAT_EXAMPLES.booking}</div>
-              <div>• Bill of Lading: {FORMAT_EXAMPLES.bol}</div>
+            <div className="space-y-1" role="list">
+              <div role="listitem">• Container: {FORMAT_EXAMPLES.container}</div>
+              <div role="listitem">• Booking: {FORMAT_EXAMPLES.booking}</div>
+              <div role="listitem">• Bill of Lading: {FORMAT_EXAMPLES.bol}</div>
             </div>
           </div>
         )}

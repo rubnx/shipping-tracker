@@ -55,7 +55,7 @@ describe('SearchComponent', () => {
     it('should render search input with placeholder', () => {
       render(<SearchComponent {...defaultProps} />);
       
-      expect(screen.getByRole('textbox')).toBeInTheDocument();
+      expect(screen.getByRole('combobox')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('Enter tracking number...')).toBeInTheDocument();
     });
 
@@ -99,7 +99,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'ABCD1234567');
       
       expect(input).toHaveValue('ABCD1234567');
@@ -114,7 +114,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'ABCD1234567');
       
       await waitFor(() => {
@@ -126,7 +126,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'A');
       
       expect(screen.queryByText('Supported formats:')).not.toBeInTheDocument();
@@ -143,7 +143,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'ABCD1234567');
       
       await waitFor(() => {
@@ -160,7 +160,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'invalid');
       
       await waitFor(() => {
@@ -177,7 +177,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'invalid');
       
       await waitFor(() => {
@@ -195,7 +195,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'ABC123456789');
       
       await waitFor(() => {
@@ -215,7 +215,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       const submitButton = screen.getByRole('button', { name: 'Search' });
       
       await user.type(input, 'ABCD1234567');
@@ -233,7 +233,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'ABC123456789');
       await user.keyboard('{Enter}');
       
@@ -260,7 +260,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       const submitButton = screen.getByRole('button', { name: 'Search' });
       
       await user.type(input, 'invalid');
@@ -278,7 +278,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       const submitButton = screen.getByRole('button', { name: 'Search' });
       
       await user.type(input, '  ABCD1234567  ');
@@ -292,7 +292,7 @@ describe('SearchComponent', () => {
     it('should disable input when loading', () => {
       render(<SearchComponent {...defaultProps} isLoading={true} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).toBeDisabled();
     });
 
@@ -324,7 +324,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} recentSearches={mockRecentSearches} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'A');
       
       await waitFor(() => {
@@ -337,7 +337,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} recentSearches={mockRecentSearches} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'ABCD');
       
       await waitFor(() => {
@@ -350,7 +350,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} recentSearches={mockRecentSearches} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'A');
       
       await waitFor(() => {
@@ -367,7 +367,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} recentSearches={mockRecentSearches} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'ABCD');
       
       await waitFor(() => {
@@ -379,7 +379,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} recentSearches={mockRecentSearches} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'ABCD');
       
       await waitFor(() => {
@@ -391,7 +391,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} recentSearches={mockRecentSearches} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'A');
       
       await waitFor(() => {
@@ -409,7 +409,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} recentSearches={mockRecentSearches} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'A');
       
       await waitFor(() => {
@@ -429,7 +429,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} recentSearches={mockRecentSearches} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'A');
       
       await waitFor(() => {
@@ -447,7 +447,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} recentSearches={mockRecentSearches} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'A');
       
       await waitFor(() => {
@@ -464,7 +464,7 @@ describe('SearchComponent', () => {
       const user = userEvent.setup();
       render(<SearchComponent {...defaultProps} recentSearches={mockRecentSearches} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'A');
       
       await waitFor(() => {
@@ -489,7 +489,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'invalid');
       
       await waitFor(() => {
@@ -506,7 +506,7 @@ describe('SearchComponent', () => {
       
       render(<SearchComponent {...defaultProps} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'ABCD1234567');
       
       await waitFor(() => {
@@ -526,14 +526,14 @@ describe('SearchComponent', () => {
     it('should auto focus input when autoFocus is true', () => {
       render(<SearchComponent {...defaultProps} autoFocus={true} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).toHaveFocus();
     });
 
     it('should not auto focus input when autoFocus is false', () => {
       render(<SearchComponent {...defaultProps} autoFocus={false} />);
       
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).not.toHaveFocus();
     });
   });

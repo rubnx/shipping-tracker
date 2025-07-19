@@ -9,4 +9,15 @@ export { default as ShipmentDetailsComponent } from './ShipmentDetailsComponent/
 
 // Timeline Component
 export { default as TimelineComponent } from './TimelineComponent/TimelineComponent';
-// export { default as MapComponent } from './MapComponent/MapComponent';
+
+// Map Component
+export { default as MapComponent } from './MapComponent/MapComponent';
+
+// Touch Friendly Component
+export { TouchFriendly } from './TouchFriendly';
+
+// Accessible Components
+export { AccessibleButton, AccessibleInput, AccessibleModal, SkipLink } from './Accessible';
+
+// Shipment Display
+export { ShipmentDisplay } from './ShipmentDisplay';

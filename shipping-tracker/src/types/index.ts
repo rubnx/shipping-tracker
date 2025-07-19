@@ -219,6 +219,10 @@ export interface MapComponentProps {
   vesselPosition?: LatLng;
   ports: Port[];
   onMarkerClick: (location: Port) => void;
+  height?: string | number;
+  className?: string;
+  showControls?: boolean;
+  interactive?: boolean;
 }
 
 export interface ShipmentDetailsProps {
