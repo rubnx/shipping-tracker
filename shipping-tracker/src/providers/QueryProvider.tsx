@@ -8,7 +8,7 @@ const queryClient = new QueryClient({
     queries: {
       // Global defaults
       staleTime: 1 * 60 * 1000, // 1 minute
-      cacheTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 5 * 60 * 1000, // 5 minutes
       retry: (failureCount, error) => {
         // Don't retry on 4xx errors
         if (error instanceof Error && error.message.includes('4')) {
@@ -36,8 +36,7 @@ export const QueryProvider: React.FC<QueryProviderProps> = ({ children }) => {
       {/* Show devtools in development */}
       {import.meta.env.DEV && (
         <ReactQueryDevtools 
-          initialIsOpen={false} 
-          position="bottom-right"
+          initialIsOpen={false}
         />
       )}
     </QueryClientProvider>

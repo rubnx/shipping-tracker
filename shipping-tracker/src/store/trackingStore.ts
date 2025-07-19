@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { TrackingState } from './types';
-import type { ShipmentTracking, SearchHistoryItem } from '../types';
+import type { SearchHistoryItem } from '../types';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
 import { useTrackingStore } from '../store';
-import type { TrackingType, ShipmentTracking } from '../types';
+import type { TrackingType } from '../types';
 
 // Query keys
 export const queryKeys = {
@@ -49,7 +49,7 @@ export const useSearchShipment = (
     },
     enabled: enabled && trackingNumber.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     retry: (failureCount, error) => {
       // Don't retry on validation errors
       if (error instanceof Error && error.message.includes('400')) {
@@ -83,7 +83,7 @@ export const useShipmentDetails = (trackingNumber: string) => {
     },
     enabled: trackingNumber.length > 0,
     staleTime: 1 * 60 * 1000, // 1 minute
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
@@ -134,8 +134,6 @@ export const useHealthCheck = () => {
 // Custom hook for search with state management
 export const useTrackingSearch = () => {
   const {
-    searchQuery,
-    searchType,
     isSearching,
     searchError,
     setIsSearching,
@@ -161,6 +159,8 @@ export const useTrackingSearch = () => {
         trackingNumber: variables.trackingNumber,
         trackingType: variables.type || 'container',
         carrier: data.carrier,
+        searchCount: 1,
+        lastSearched: new Date(),
       });
       
       // Cache the result

@@ -169,6 +169,9 @@ export const useKeyboardNavigation = (
  */
 export const useScreenReader = () => {
   const announce = (message: string, priority: 'polite' | 'assertive' = 'polite') => {
+    // Check if we're in a browser environment
+    if (typeof document === 'undefined') return;
+    
     const announcement = document.createElement('div');
     announcement.setAttribute('aria-live', priority);
     announcement.setAttribute('aria-atomic', 'true');
@@ -178,9 +181,14 @@ export const useScreenReader = () => {
     document.body.appendChild(announcement);
     
     // Remove after announcement
-    setTimeout(() => {
-      document.body.removeChild(announcement);
+    const timeoutId = setTimeout(() => {
+      if (document.body.contains(announcement)) {
+        document.body.removeChild(announcement);
+      }
     }, 1000);
+    
+    // Return cleanup function for testing
+    return () => clearTimeout(timeoutId);
   };
 
   return { announce };

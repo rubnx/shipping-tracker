@@ -4,7 +4,7 @@ import type { AppState } from './types';
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       // Initial state
       theme: 'system',
       highContrast: false,
