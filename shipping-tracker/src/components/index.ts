@@ -21,3 +21,14 @@ export { AccessibleButton, AccessibleInput, AccessibleModal, SkipLink } from './
 
 // Shipment Display
 export { ShipmentDisplay } from './ShipmentDisplay';
+
+// Performance Components
+export { LazyWrapper, ImageOptimizer, PerformanceMonitor } from './Performance';
+
+// Lazy Components
+export * from './LazyComponents';
+
+// Error Handling Components
+export { ErrorBoundary } from './ErrorBoundary';
+export { ErrorDisplay } from './ErrorDisplay';
+export { NetworkStatus } from './NetworkStatus';

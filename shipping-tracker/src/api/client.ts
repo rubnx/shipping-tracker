@@ -5,6 +5,7 @@ import type {
   ValidationResult 
 } from '../types';
 import { mockAPIServer } from './mockServer';
+import { parseHttpError, withTimeout, retryWithBackoff } from '../utils';
 
 // API configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
@@ -26,38 +27,35 @@ class APIClient {
     options: RequestInit = {}
   ): Promise<APIResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
+    
     try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
+      const response = await withTimeout(
+        fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+        }),
+        this.timeout
+      );
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = {
+          response: {
+            status: response.status,
+            statusText: response.statusText,
+            data: await response.json().catch(() => ({})),
+          }
+        };
+        throw errorData;
       }
 
       const data = await response.json();
       return data;
     } catch (error) {
-      clearTimeout(timeoutId);
-      
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new Error('Request timeout');
-        }
-        throw error;
-      }
-      
-      throw new Error('Unknown error occurred');
+      // Parse and throw standardized error
+      throw parseHttpError(error);
     }
   }
 
@@ -85,8 +83,12 @@ class APIClient {
     const params = new URLSearchParams({ trackingNumber });
     if (type) params.append('type', type);
 
-    return this.request<ShipmentTracking>(`/track?${params}`).then(
-      response => response.data!
+    return retryWithBackoff(
+      () => this.request<ShipmentTracking>(`/track?${params}`).then(
+        response => response.data!
+      ),
+      3,
+      1000
     );
   }
 

@@ -23,3 +23,21 @@ export {
   useKeyboardNavigation,
   useScreenReader
 } from './useAccessibility';
+
+// Performance hooks
+export {
+  useDebounce,
+  useThrottle,
+  useIntersectionObserver,
+  useRenderPerformance,
+  usePreload,
+  useNetworkConnection,
+  useVirtualScroll
+} from './usePerformance';
+
+// Component performance hook
+export { useComponentPerformance } from './useComponentPerformance';
+
+// Error handling hooks
+export { useErrorHandling } from './useErrorHandling';
+export { useNetworkStatus } from './useNetworkStatus';

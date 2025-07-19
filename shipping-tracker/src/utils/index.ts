@@ -240,3 +240,45 @@ export const searchHistoryUtils = {
     }
   },
 };
+
+// Error handling utilities
+export {
+  createAppError,
+  parseHttpError,
+  retryWithBackoff,
+  isOnline,
+  onNetworkStatusChange,
+  logError,
+  withTimeout,
+  ErrorCodes,
+  type AppError
+} from './errorHandling';
+
+// Security utilities
+export {
+  sanitizeString,
+  sanitizeTrackingNumber,
+  isValidEmail,
+  isValidUrl,
+  RateLimiter,
+  generateCSPHeader,
+  getSecurityHeaders,
+  isValidApiKey,
+  generateSecureToken,
+  hashData,
+  isValidOrigin,
+  isBotRequest,
+  isValidRequestSize
+} from './security';
+
+// Configuration utilities
+export {
+  loadConfig,
+  getConfig,
+  isDevelopment,
+  isProduction,
+  isTest,
+  getClientConfig,
+  maskSensitiveConfig,
+  type AppConfig
+} from './config';

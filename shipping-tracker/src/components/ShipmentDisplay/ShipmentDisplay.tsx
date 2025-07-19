@@ -1,5 +1,6 @@
 import React from 'react';
-import { ShipmentDetailsComponent, TimelineComponent, MapComponent } from '../';
+import { LazyShipmentDetailsComponent, LazyTimelineComponent, LazyMapComponent } from '../LazyComponents';
+import { LazyWrapper } from '../Performance';
 import { useTrackingStore, useUIStore } from '../../store';
 import { useRefreshShipment } from '../../api';
 import type { Port } from '../../types';
@@ -40,13 +41,15 @@ const ShipmentDisplay: React.FC = () => {
         <h2 id="shipment-details-heading" className="sr-only">
           Shipment Details
         </h2>
-        <ShipmentDetailsComponent
-          shipment={currentShipment}
-          isLoading={refreshMutation.isPending}
-          error={refreshMutation.error?.message || null}
-          onRefresh={handleRefresh}
-          showActions={true}
-        />
+        <LazyWrapper minHeight={300}>
+          <LazyShipmentDetailsComponent
+            shipment={currentShipment}
+            isLoading={refreshMutation.isPending}
+            error={refreshMutation.error?.message || null}
+            onRefresh={handleRefresh}
+            showActions={true}
+          />
+        </LazyWrapper>
       </section>
 
       {/* Interactive Map */}
@@ -67,20 +70,22 @@ const ShipmentDisplay: React.FC = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
             <div className="lg:col-span-3 order-2 lg:order-1">
-              <MapComponent
-                route={currentShipment.route}
-                vesselPosition={currentShipment.vessel.currentPosition}
-                ports={[
-                  currentShipment.route.origin,
-                  currentShipment.route.destination,
-                  ...currentShipment.route.intermediateStops,
-                ]}
-                onMarkerClick={handleMarkerClick}
-                height={isMobile ? 300 : 400}
-                className="border border-gray-200 rounded-lg"
-                showControls={true}
-                interactive={true}
-              />
+              <LazyWrapper minHeight={isMobile ? 300 : 400}>
+                <LazyMapComponent
+                  route={currentShipment.route}
+                  vesselPosition={currentShipment.vessel.currentPosition}
+                  ports={[
+                    currentShipment.route.origin,
+                    currentShipment.route.destination,
+                    ...currentShipment.route.intermediateStops,
+                  ]}
+                  onMarkerClick={handleMarkerClick}
+                  height={isMobile ? 300 : 400}
+                  className="border border-gray-200 rounded-lg"
+                  showControls={true}
+                  interactive={true}
+                />
+              </LazyWrapper>
             </div>
             
             <div className="order-1 lg:order-2 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4">
@@ -153,12 +158,14 @@ const ShipmentDisplay: React.FC = () => {
           <h2 id="timeline-heading" className="sr-only">
             Shipment Timeline
           </h2>
-          <TimelineComponent
-            events={currentShipment.timeline}
-            currentStatus={currentShipment.status}
-            completionPercentage={completionPercentage}
-            showProgress={true}
-          />
+          <LazyWrapper minHeight={400}>
+            <LazyTimelineComponent
+              events={currentShipment.timeline}
+              currentStatus={currentShipment.status}
+              completionPercentage={completionPercentage}
+              showProgress={true}
+            />
+          </LazyWrapper>
         </section>
       )}
     </div>

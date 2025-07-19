@@ -6,12 +6,11 @@ import type {
   SearchHistoryItem 
 } from '../../types';
 import { 
-  validateTrackingNumber, 
-  debounce 
+  validateTrackingNumber
 } from '../../utils';
 import { FORMAT_EXAMPLES } from '../../types/constants';
 import { LoadingSpinner, ProgressIndicator } from '../LoadingStates';
-import { useIsMobile, useIsTouchDevice, useScreenReader } from '../../hooks';
+import { useIsMobile, useIsTouchDevice, useScreenReader, useDebounce, useComponentPerformance } from '../../hooks';
 
 const SearchComponent: React.FC<SearchComponentProps> = ({
   onSearch,
@@ -34,15 +33,21 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   
+  // Performance tracking
+  useComponentPerformance('SearchComponent', true);
+  
   // Responsive hooks
   const isMobile = useIsMobile();
   const isTouch = useIsTouchDevice();
   const { announce } = useScreenReader();
+  
+  // Debounce validation for better performance
+  const debouncedQuery = useDebounce(state.query, 300);
 
-  // Debounced validation function
-  const debouncedValidation = debounce((query: string) => {
-    if (query.trim()) {
-      const validation = validateTrackingNumber(query);
+  // Validation effect with debounced query
+  useEffect(() => {
+    if (debouncedQuery.trim()) {
+      const validation = validateTrackingNumber(debouncedQuery);
       setState(prev => ({
         ...prev,
         validationError: validation.isValid ? null : validation.error || null,
@@ -62,7 +67,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
         detectedType: null,
       }));
     }
-  }, 300);
+  }, [debouncedQuery, announce]);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,8 +77,6 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
       query,
       showSuggestions: query.length > 0 && recentSearches.length > 0,
     }));
-
-    debouncedValidation(query);
   };
 
   // Handle form submission
