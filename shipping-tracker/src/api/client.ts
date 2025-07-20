@@ -10,7 +10,11 @@ import { parseHttpError, withTimeout, retryWithBackoff } from '../utils';
 // API configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 const API_TIMEOUT = 10000; // 10 seconds
-const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API !== 'false'; // Default to true
+
+// Helper function to check if we should use mock API (can be mocked in tests)
+const shouldUseMockAPI = (): boolean => {
+  return import.meta.env.VITE_USE_MOCK_API !== 'false'; // Default to true
+};
 
 // API client class
 class APIClient {
@@ -61,7 +65,7 @@ class APIClient {
 
   // Validate tracking number
   async validateTrackingNumber(trackingNumber: string): Promise<ValidationResult> {
-    if (USE_MOCK_API) {
+    if (shouldUseMockAPI()) {
       return mockAPIServer.validateTrackingNumber(trackingNumber);
     }
     
@@ -76,7 +80,7 @@ class APIClient {
     trackingNumber: string,
     type?: TrackingType
   ): Promise<ShipmentTracking> {
-    if (USE_MOCK_API) {
+    if (shouldUseMockAPI()) {
       return mockAPIServer.searchShipment(trackingNumber, type);
     }
     
@@ -94,7 +98,7 @@ class APIClient {
 
   // Get shipment details
   async getShipmentDetails(trackingNumber: string): Promise<ShipmentTracking> {
-    if (USE_MOCK_API) {
+    if (shouldUseMockAPI()) {
       return mockAPIServer.getShipmentDetails(trackingNumber);
     }
     
@@ -105,7 +109,7 @@ class APIClient {
 
   // Refresh shipment data
   async refreshShipment(trackingNumber: string): Promise<ShipmentTracking> {
-    if (USE_MOCK_API) {
+    if (shouldUseMockAPI()) {
       return mockAPIServer.refreshShipment(trackingNumber);
     }
     
@@ -116,7 +120,7 @@ class APIClient {
 
   // Get multiple shipments
   async getShipments(trackingNumbers: string[]): Promise<ShipmentTracking[]> {
-    if (USE_MOCK_API) {
+    if (shouldUseMockAPI()) {
       return mockAPIServer.getShipments(trackingNumbers);
     }
     
@@ -128,7 +132,7 @@ class APIClient {
 
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    if (USE_MOCK_API) {
+    if (shouldUseMockAPI()) {
       return mockAPIServer.healthCheck();
     }
     
@@ -142,4 +146,4 @@ class APIClient {
 export const apiClient = new APIClient();
 
 // Export for testing
-export { APIClient };
+export { APIClient, shouldUseMockAPI };

@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useNetworkStatus } from './useNetworkStatus';
 
 // Mock the error handling utilities
-vi.mock('../utils/errorHandling', () => ({
+vi.mock('../utils', () => ({
   isOnline: vi.fn(),
   onNetworkStatusChange: vi.fn(),
 }));
@@ -12,9 +12,9 @@ describe('useNetworkStatus', () => {
   const mockOnNetworkStatusChange = vi.fn();
   const mockIsOnline = vi.fn();
   
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    const { isOnline, onNetworkStatusChange } = require('../utils/errorHandling');
+    const { isOnline, onNetworkStatusChange } = await import('../utils');
     isOnline.mockImplementation(mockIsOnline);
     onNetworkStatusChange.mockImplementation(mockOnNetworkStatusChange);
   });

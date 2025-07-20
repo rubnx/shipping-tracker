@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useErrorHandling } from './useErrorHandling';
-import { createAppError, ErrorCodes } from '../utils/errorHandling';
+import { createAppError, ErrorCodes } from '../utils';
 
 // Mock the error handling utilities
-vi.mock('../utils/errorHandling', async () => {
-  const actual = await vi.importActual('../utils/errorHandling');
+vi.mock('../utils', async () => {
+  const actual = await vi.importActual('../utils');
   return {
     ...actual,
     logError: vi.fn(),
@@ -105,8 +105,8 @@ describe('useErrorHandling', () => {
     expect(result.current.isRetryable).toBe(false);
   });
 
-  it('should handle errors with handleError method', () => {
-    const { parseHttpError } = require('../utils/errorHandling');
+  it('should handle errors with handleError method', async () => {
+    const { parseHttpError } = await import('../utils');
     const mockAppError = createAppError(ErrorCodes.API_ERROR, 'API error');
     parseHttpError.mockReturnValue(mockAppError);
     
@@ -121,8 +121,8 @@ describe('useErrorHandling', () => {
     expect(result.current.error).toBe(mockAppError);
   });
 
-  it('should log errors when autoLog is enabled', () => {
-    const { logError } = require('../utils/errorHandling');
+  it('should log errors when autoLog is enabled', async () => {
+    const { logError } = await import('../utils');
     const { result } = renderHook(() => useErrorHandling(undefined, true));
     const appError = createAppError(ErrorCodes.NETWORK_ERROR, 'Test error');
     
@@ -133,8 +133,8 @@ describe('useErrorHandling', () => {
     expect(logError).toHaveBeenCalledWith(appError);
   });
 
-  it('should not log errors when autoLog is disabled', () => {
-    const { logError } = require('../utils/errorHandling');
+  it('should not log errors when autoLog is disabled', async () => {
+    const { logError } = await import('../utils');
     const { result } = renderHook(() => useErrorHandling(undefined, false));
     const appError = createAppError(ErrorCodes.NETWORK_ERROR, 'Test error');
     
@@ -145,8 +145,8 @@ describe('useErrorHandling', () => {
     expect(logError).not.toHaveBeenCalled();
   });
 
-  it('should handle unknown errors in handleError', () => {
-    const { parseHttpError } = require('../utils/errorHandling');
+  it('should handle unknown errors in handleError', async () => {
+    const { parseHttpError } = await import('../utils');
     parseHttpError.mockImplementation(() => {
       throw new Error('Parse failed');
     });

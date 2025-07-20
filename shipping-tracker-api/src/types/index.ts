@@ -200,5 +200,8 @@ export interface APIProviderConfig {
   reliability: number; // 0-1 score
   timeout: number; // milliseconds
   retryAttempts: number;
-  supportedTypes: TrackingType[];
+  supportedTypes: (TrackingType | 'tracking' | 'express' | 'vessel')[];
+  coverage: ('global' | 'asia-pacific' | 'europe' | 'americas' | 'mediterranean' | 'usa' | 'canada' | 'uk')[];
+  cost: 'free' | 'freemium' | 'paid';
+  aggregator?: boolean; // True if this is a third-party aggregator service
 }

@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middleware/errorHandler';
 import { trackingRoutes } from './routes/tracking';
+import { dashboardRoutes } from './routes/dashboard';
 import { config, validateEnvironment } from './config/environment';
 import { testConnection } from './config/database';
 import { runMigrations } from './database/migrator';
@@ -54,6 +55,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/tracking', trackingRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

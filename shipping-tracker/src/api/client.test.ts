@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { APIClient } from './client';
-import { ErrorCodes } from '../utils/errorHandling';
+import { ErrorCodes } from '../utils';
 
 // Mock fetch
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 // Mock the error handling utilities
-vi.mock('../utils/errorHandling', async () => {
-  const actual = await vi.importActual('../utils/errorHandling');
+vi.mock('../utils', async () => {
+  const actual = await vi.importActual('../utils');
   return {
     ...actual,
     withTimeout: vi.fn((promise) => promise),
@@ -28,21 +28,32 @@ vi.mock('./mockServer', () => ({
   },
 }));
 
+// Mock the shouldUseMockAPI function by mocking import.meta.env
+Object.defineProperty(import.meta, 'env', {
+  value: {
+    VITE_USE_MOCK_API: 'false',
+    VITE_API_BASE_URL: 'http://localhost:3001/api',
+  },
+  writable: true,
+});
+
 describe('APIClient', () => {
   let client: APIClient;
   const mockParseHttpError = vi.fn();
   const mockRetryWithBackoff = vi.fn();
   
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    client = new APIClient();
     
-    const { parseHttpError, retryWithBackoff } = require('../utils/errorHandling');
+    // Set up mocks before creating client
+    const { parseHttpError, retryWithBackoff } = await import('../utils');
     parseHttpError.mockImplementation(mockParseHttpError);
     retryWithBackoff.mockImplementation(mockRetryWithBackoff);
     
-    // Reset environment variable
-    vi.stubEnv('VITE_USE_MOCK_API', 'false');
+    // Default to not using mock API
+    import.meta.env.VITE_USE_MOCK_API = 'false';
+    
+    client = new APIClient();
   });
 
   afterEach(() => {
@@ -132,8 +143,8 @@ describe('APIClient', () => {
 
   describe('searchShipment', () => {
     it('should use mock API when configured', async () => {
-      vi.stubEnv('VITE_USE_MOCK_API', 'true');
-      const { mockAPIServer } = require('./mockServer');
+      import.meta.env.VITE_USE_MOCK_API = 'true';
+      const { mockAPIServer } = await import('./mockServer');
       const mockShipment = { id: '1', trackingNumber: 'TEST123' };
       mockAPIServer.searchShipment.mockResolvedValue(mockShipment);
       
@@ -196,8 +207,8 @@ describe('APIClient', () => {
 
   describe('validateTrackingNumber', () => {
     it('should use mock API when configured', async () => {
-      vi.stubEnv('VITE_USE_MOCK_API', 'true');
-      const { mockAPIServer } = require('./mockServer');
+      import.meta.env.VITE_USE_MOCK_API = 'true';
+      const { mockAPIServer } = await import('./mockServer');
       const mockValidation = { isValid: true, detectedType: 'container' };
       mockAPIServer.validateTrackingNumber.mockResolvedValue(mockValidation);
       
@@ -230,8 +241,8 @@ describe('APIClient', () => {
 
   describe('getShipmentDetails', () => {
     it('should use mock API when configured', async () => {
-      vi.stubEnv('VITE_USE_MOCK_API', 'true');
-      const { mockAPIServer } = require('./mockServer');
+      import.meta.env.VITE_USE_MOCK_API = 'true';
+      const { mockAPIServer } = await import('./mockServer');
       const mockShipment = { id: '1', trackingNumber: 'TEST123' };
       mockAPIServer.getShipmentDetails.mockResolvedValue(mockShipment);
       
@@ -261,8 +272,8 @@ describe('APIClient', () => {
 
   describe('refreshShipment', () => {
     it('should use mock API when configured', async () => {
-      vi.stubEnv('VITE_USE_MOCK_API', 'true');
-      const { mockAPIServer } = require('./mockServer');
+      import.meta.env.VITE_USE_MOCK_API = 'true';
+      const { mockAPIServer } = await import('./mockServer');
       const mockShipment = { id: '1', trackingNumber: 'TEST123' };
       mockAPIServer.refreshShipment.mockResolvedValue(mockShipment);
       
@@ -294,8 +305,8 @@ describe('APIClient', () => {
 
   describe('getShipments', () => {
     it('should use mock API when configured', async () => {
-      vi.stubEnv('VITE_USE_MOCK_API', 'true');
-      const { mockAPIServer } = require('./mockServer');
+      import.meta.env.VITE_USE_MOCK_API = 'true';
+      const { mockAPIServer } = await import('./mockServer');
       const mockShipments = [{ id: '1', trackingNumber: 'TEST123' }];
       mockAPIServer.getShipments.mockResolvedValue(mockShipments);
       

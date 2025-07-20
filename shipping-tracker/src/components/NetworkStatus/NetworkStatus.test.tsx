@@ -3,16 +3,16 @@ import { render, screen, waitFor } from '@testing-library/react';
 import NetworkStatus from './NetworkStatus';
 
 // Mock the useNetworkStatus hook
-vi.mock('../../hooks/useNetworkStatus', () => ({
+vi.mock('../../hooks', () => ({
   useNetworkStatus: vi.fn(),
 }));
 
 describe('NetworkStatus', () => {
   const mockUseNetworkStatus = vi.fn();
   
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    const { useNetworkStatus } = require('../../hooks/useNetworkStatus');
+    const { useNetworkStatus } = await import('../../hooks');
     useNetworkStatus.mockImplementation(mockUseNetworkStatus);
   });
 

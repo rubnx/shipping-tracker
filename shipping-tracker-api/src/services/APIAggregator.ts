@@ -21,59 +21,197 @@ export class APIAggregator {
   }
 
   private initializeProviders(): void {
-    // Initialize API provider configurations
+    // Initialize container-focused API provider configurations for world-class container tracking
     const providers: APIProviderConfig[] = [
+      // === MAJOR OCEAN CARRIERS (9 PROVIDERS) ===
       {
         name: 'maersk',
         baseUrl: 'https://api.maersk.com/track',
         apiKey: config.apiKeys.maersk,
-        rateLimit: {
-          requestsPerMinute: 60,
-          requestsPerHour: 1000
-        },
+        rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
         reliability: 0.95,
         timeout: 10000,
         retryAttempts: 3,
-        supportedTypes: ['booking', 'container', 'bol']
-      },
-      {
-        name: 'hapag-lloyd',
-        baseUrl: 'https://api.hapag-lloyd.com/tracking',
-        apiKey: config.apiKeys.hapagLloyd,
-        rateLimit: {
-          requestsPerMinute: 30,
-          requestsPerHour: 500
-        },
-        reliability: 0.90,
-        timeout: 8000,
-        retryAttempts: 2,
-        supportedTypes: ['booking', 'container']
+        supportedTypes: ['booking', 'container', 'bol'],
+        coverage: ['global'],
+        cost: 'paid'
       },
       {
         name: 'msc',
         baseUrl: 'https://api.msc.com/track',
         apiKey: config.apiKeys.msc,
-        rateLimit: {
-          requestsPerMinute: 40,
-          requestsPerHour: 800
-        },
+        rateLimit: { requestsPerMinute: 40, requestsPerHour: 800 },
         reliability: 0.88,
         timeout: 12000,
         retryAttempts: 3,
-        supportedTypes: ['booking', 'container', 'bol']
+        supportedTypes: ['booking', 'container', 'bol'],
+        coverage: ['global'],
+        cost: 'paid'
       },
       {
         name: 'cma-cgm',
         baseUrl: 'https://api.cma-cgm.com/tracking',
         apiKey: config.apiKeys.cmaCgm,
-        rateLimit: {
-          requestsPerMinute: 25,
-          requestsPerHour: 400
-        },
+        rateLimit: { requestsPerMinute: 25, requestsPerHour: 400 },
         reliability: 0.85,
         timeout: 9000,
         retryAttempts: 2,
-        supportedTypes: ['booking', 'container']
+        supportedTypes: ['booking', 'container'],
+        coverage: ['global'],
+        cost: 'paid'
+      },
+      {
+        name: 'cosco',
+        baseUrl: 'https://api.cosco-shipping.com/tracking',
+        apiKey: config.apiKeys.cosco,
+        rateLimit: { requestsPerMinute: 35, requestsPerHour: 600 },
+        reliability: 0.87,
+        timeout: 10000,
+        retryAttempts: 3,
+        supportedTypes: ['booking', 'container', 'bol'],
+        coverage: ['asia-pacific', 'global'],
+        cost: 'paid'
+      },
+      {
+        name: 'hapag-lloyd',
+        baseUrl: 'https://api.hapag-lloyd.com/tracking',
+        apiKey: config.apiKeys.hapagLloyd,
+        rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+        reliability: 0.90,
+        timeout: 8000,
+        retryAttempts: 2,
+        supportedTypes: ['booking', 'container'],
+        coverage: ['global'],
+        cost: 'paid'
+      },
+      {
+        name: 'evergreen',
+        baseUrl: 'https://api.evergreen-line.com/tracking',
+        apiKey: config.apiKeys.evergreen,
+        rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+        reliability: 0.84,
+        timeout: 9000,
+        retryAttempts: 2,
+        supportedTypes: ['booking', 'container'],
+        coverage: ['asia-pacific', 'global'],
+        cost: 'paid'
+      },
+      {
+        name: 'one-line',
+        baseUrl: 'https://api.one-line.com/tracking',
+        apiKey: config.apiKeys.oneLine,
+        rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+        reliability: 0.86,
+        timeout: 9000,
+        retryAttempts: 2,
+        supportedTypes: ['booking', 'container'],
+        coverage: ['asia-pacific', 'global'],
+        cost: 'paid'
+      },
+      {
+        name: 'yang-ming',
+        baseUrl: 'https://api.yangming.com/tracking',
+        apiKey: config.apiKeys.yangMing,
+        rateLimit: { requestsPerMinute: 25, requestsPerHour: 400 },
+        reliability: 0.82,
+        timeout: 8000,
+        retryAttempts: 2,
+        supportedTypes: ['booking', 'container'],
+        coverage: ['asia-pacific'],
+        cost: 'paid'
+      },
+      {
+        name: 'zim',
+        baseUrl: 'https://api.zim.com/tracking',
+        apiKey: config.apiKeys.zim,
+        rateLimit: { requestsPerMinute: 20, requestsPerHour: 300 },
+        reliability: 0.80,
+        timeout: 8000,
+        retryAttempts: 2,
+        supportedTypes: ['booking', 'container'],
+        coverage: ['mediterranean', 'global'],
+        cost: 'paid'
+      },
+
+      // === CONTAINER-FOCUSED AGGREGATORS (3 PROVIDERS) ===
+      {
+        name: 'shipsgo',
+        baseUrl: 'https://api.shipsgo.com/v2/tracking',
+        apiKey: config.apiKeys.shipsgo,
+        rateLimit: { requestsPerMinute: 100, requestsPerHour: 2000 },
+        reliability: 0.88,
+        timeout: 8000,
+        retryAttempts: 2,
+        supportedTypes: ['container', 'booking'],
+        coverage: ['global'],
+        cost: 'freemium',
+        aggregator: true
+      },
+      {
+        name: 'searates',
+        baseUrl: 'https://api.searates.com/tracking',
+        apiKey: config.apiKeys.searates,
+        rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+        reliability: 0.85,
+        timeout: 8000,
+        retryAttempts: 2,
+        supportedTypes: ['container', 'booking'],
+        coverage: ['global'],
+        cost: 'freemium',
+        aggregator: true
+      },
+      {
+        name: 'project44',
+        baseUrl: 'https://api.project44.com/v4/tracking',
+        apiKey: config.apiKeys.project44,
+        rateLimit: { requestsPerMinute: 200, requestsPerHour: 5000 },
+        reliability: 0.93,
+        timeout: 10000,
+        retryAttempts: 3,
+        supportedTypes: ['booking', 'container', 'bol'],
+        coverage: ['global'],
+        cost: 'paid',
+        aggregator: true
+      },
+
+      // === VESSEL TRACKING SERVICES (2 PROVIDERS) ===
+      {
+        name: 'marine-traffic',
+        baseUrl: 'https://api.marinetraffic.com/v1/tracking',
+        apiKey: config.apiKeys.marineTraffic,
+        rateLimit: { requestsPerMinute: 10, requestsPerHour: 100 },
+        reliability: 0.70,
+        timeout: 10000,
+        retryAttempts: 2,
+        supportedTypes: ['vessel', 'container'],
+        coverage: ['global'],
+        cost: 'freemium'
+      },
+      {
+        name: 'vessel-finder',
+        baseUrl: 'https://api.vesselfinder.com/tracking',
+        apiKey: config.apiKeys.vesselFinder,
+        rateLimit: { requestsPerMinute: 15, requestsPerHour: 200 },
+        reliability: 0.72,
+        timeout: 8000,
+        retryAttempts: 2,
+        supportedTypes: ['vessel', 'container'],
+        coverage: ['global'],
+        cost: 'freemium'
+      },
+
+      // === FREE CONTAINER TRACKING (1 PROVIDER) ===
+      {
+        name: 'track-trace',
+        baseUrl: 'https://api.track-trace.com/v1/tracking',
+        apiKey: config.apiKeys.trackTrace,
+        rateLimit: { requestsPerMinute: 50, requestsPerHour: 500 },
+        reliability: 0.68,
+        timeout: 8000,
+        retryAttempts: 2,
+        supportedTypes: ['container'],
+        coverage: ['global'],
+        cost: 'free'
       }
     ];
 
@@ -305,15 +443,95 @@ export class APIAggregator {
   }
 
   private getAvailableProviders(trackingType?: TrackingType): APIProviderConfig[] {
-    const providers = Array.from(this.providers.values());
+    let providers = Array.from(this.providers.values());
     
-    if (!trackingType) {
-      return providers.sort((a, b) => b.reliability - a.reliability);
+    // Filter by supported tracking types
+    if (trackingType) {
+      providers = providers.filter(p => p.supportedTypes.includes(trackingType));
     }
     
-    return providers
-      .filter(p => p.supportedTypes.includes(trackingType))
+    // Smart routing: prioritize by cost efficiency and reliability
+    return this.prioritizeProviders(providers);
+  }
+
+  /**
+   * Smart provider prioritization for world-class coverage
+   * Strategy: Free APIs first, then high-reliability paid, then aggregators as fallback
+   */
+  private prioritizeProviders(providers: APIProviderConfig[]): APIProviderConfig[] {
+    // 1. Free APIs first (cost optimization)
+    const freeProviders = providers
+      .filter(p => p.cost === 'free')
       .sort((a, b) => b.reliability - a.reliability);
+    
+    // 2. High-reliability paid APIs (success optimization)
+    const highReliabilityPaid = providers
+      .filter(p => p.cost === 'paid' && p.reliability >= 0.90)
+      .sort((a, b) => b.reliability - a.reliability);
+    
+    // 3. Medium-reliability paid APIs
+    const mediumReliabilityPaid = providers
+      .filter(p => p.cost === 'paid' && p.reliability >= 0.80 && p.reliability < 0.90)
+      .sort((a, b) => b.reliability - a.reliability);
+    
+    // 4. Freemium services
+    const freemiumProviders = providers
+      .filter(p => p.cost === 'freemium')
+      .sort((a, b) => b.reliability - a.reliability);
+    
+    // 5. Third-party aggregators as comprehensive fallback
+    const aggregators = providers
+      .filter(p => p.aggregator === true)
+      .sort((a, b) => b.reliability - a.reliability);
+    
+    // 6. Lower reliability providers as last resort
+    const lowReliabilityProviders = providers
+      .filter(p => p.reliability < 0.80 && !p.aggregator)
+      .sort((a, b) => b.reliability - a.reliability);
+
+    console.log(`📊 Provider prioritization: Free(${freeProviders.length}), HighPaid(${highReliabilityPaid.length}), MedPaid(${mediumReliabilityPaid.length}), Freemium(${freemiumProviders.length}), Aggregators(${aggregators.length}), LowRel(${lowReliabilityProviders.length})`);
+    
+    return [
+      ...freeProviders,
+      ...highReliabilityPaid,
+      ...mediumReliabilityPaid,
+      ...freemiumProviders,
+      ...aggregators,
+      ...lowReliabilityProviders
+    ];
+  }
+
+  /**
+   * Detect likely carriers based on tracking number format
+   */
+  private detectLikelyCarriers(trackingNumber: string): string[] {
+    const patterns = {
+      // Container number patterns
+      maersk: /^[A-Z]{4}\d{7}$/, // Standard container format
+      msc: /^MSC[A-Z]\d{7}$/,
+      cma: /^CMA[A-Z]\d{7}$/,
+      cosco: /^COS[A-Z]\d{7}$/,
+      
+      // Express patterns
+      fedex: /^\d{12}$|^\d{14}$/,
+      ups: /^1Z[A-Z0-9]{16}$/,
+      dhl: /^\d{10}$|^\d{11}$/,
+      
+      // Postal patterns
+      usps: /^(94|93|92|91|90)\d{20}$/,
+      canadaPost: /^\d{16}$/,
+      royalMail: /^[A-Z]{2}\d{9}GB$/
+    };
+
+    const likelyCarriers: string[] = [];
+    
+    for (const [carrier, pattern] of Object.entries(patterns)) {
+      if (pattern.test(trackingNumber.toUpperCase())) {
+        likelyCarriers.push(carrier);
+      }
+    }
+    
+    return likelyCarriers;
   }
 
   private checkRateLimit(providerName: string): boolean {
