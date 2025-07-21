@@ -7,16 +7,64 @@ import {
   ApiUsageRecord
 } from '../types';
 import { config } from '../config/environment';
+import { MaerskAPIService } from './carriers/MaerskAPIService';
+import { MSCAPIService } from './carriers/MSCAPIService';
+import { TrackTraceAPIService } from './carriers/TrackTraceAPIService';
+import { ShipsGoAPIService } from './carriers/ShipsGoAPIService';
+import { SeaRatesAPIService } from './carriers/SeaRatesAPIService';
+import { CMACGMAPIService } from './carriers/CMACGMAPIService';
+import { COSCOAPIService } from './carriers/COSCOAPIService';
+import { HapagLloydAPIService } from './carriers/HapagLloydAPIService';
+import { EvergreenAPIService } from './carriers/EvergreenAPIService';
+import { ONELineAPIService } from './carriers/ONELineAPIService';
+import { YangMingAPIService } from './carriers/YangMingAPIService';
+import { Project44APIService } from './carriers/Project44APIService';
+import { ZIMAPIService } from './carriers/ZIMAPIService';
+import { SmartContainerRouter, RoutingContext } from './SmartContainerRouter';
+import { MarineTrafficAPIService } from './carriers/MarineTrafficAPIService';
+import { VesselFinderAPIService } from './carriers/VesselFinderAPIService';
 
 export class APIAggregator {
   private providers: Map<string, APIProviderConfig>;
   private rateLimitTracker: Map<string, { count: number; windowStart: Date }>;
   private cache: Map<string, { data: RawTrackingData; expires: Date }>;
+  private maerskService: MaerskAPIService;
+  private mscService: MSCAPIService;
+  private trackTraceService: TrackTraceAPIService;
+  private shipsGoService: ShipsGoAPIService;
+  private searatesService: SeaRatesAPIService;
+  private cmaCgmService: CMACGMAPIService;
+  private coscoService: COSCOAPIService;
+  private hapagLloydService: HapagLloydAPIService;
+  private evergreenService: EvergreenAPIService;
+  private oneLineService: ONELineAPIService;
+  private yangMingService: YangMingAPIService;
+  private project44Service: Project44APIService;
+  private zimService: ZIMAPIService;
+  private marineTrafficService: MarineTrafficAPIService;
+  private vesselFinderService: VesselFinderAPIService;
+  private smartRouter: SmartContainerRouter;
 
   constructor() {
     this.providers = new Map();
     this.rateLimitTracker = new Map();
     this.cache = new Map();
+    this.maerskService = new MaerskAPIService();
+    this.mscService = new MSCAPIService();
+    this.trackTraceService = new TrackTraceAPIService();
+    this.shipsGoService = new ShipsGoAPIService();
+    this.searatesService = new SeaRatesAPIService();
+    this.cmaCgmService = new CMACGMAPIService();
+    this.coscoService = new COSCOAPIService();
+    this.hapagLloydService = new HapagLloydAPIService();
+    this.evergreenService = new EvergreenAPIService();
+    this.oneLineService = new ONELineAPIService();
+    this.yangMingService = new YangMingAPIService();
+    this.project44Service = new Project44APIService();
+    this.zimService = new ZIMAPIService();
+    this.marineTrafficService = new MarineTrafficAPIService();
+    this.vesselFinderService = new VesselFinderAPIService();
+    this.smartRouter = new SmartContainerRouter();
     this.initializeProviders();
   }
 
@@ -225,12 +273,16 @@ export class APIAggregator {
   }
 
   /**
-   * Fetch tracking data from multiple sources
+   * Fetch tracking data from multiple sources with smart routing
    * Requirement 7.1: Attempt to retrieve data from alternative APIs
+   * Requirement 7.2: Prioritize the most reliable source
+   * Requirement 7.4: Gracefully degrade when all APIs are unavailable
    */
   async fetchFromMultipleSources(
     trackingNumber: string, 
-    trackingType?: TrackingType
+    trackingType?: TrackingType,
+    userTier?: 'free' | 'premium' | 'enterprise',
+    costOptimization?: boolean
   ): Promise<RawTrackingData[]> {
     const cacheKey = `${trackingNumber}-${trackingType || 'auto'}`;
     
@@ -241,41 +293,70 @@ export class APIAggregator {
       return [cached];
     }
 
-    const availableProviders = this.getAvailableProviders(trackingType);
+    // Use smart router to determine optimal provider order
+    const routingContext: RoutingContext = {
+      trackingNumber,
+      trackingType: trackingType || 'container',
+      userTier,
+      costOptimization,
+      previousFailures: this.getRecentFailures()
+    };
+
+    const routingDecision = this.smartRouter.analyzeRouting(routingContext);
+    console.log(`🧠 Smart routing decision: ${routingDecision.reasoning}`);
+
     const results: RawTrackingData[] = [];
     const errors: APIError[] = [];
 
-    // Try providers in order of reliability
-    for (const provider of availableProviders) {
+    // Try providers in smart-prioritized order
+    for (const providerName of routingDecision.prioritizedProviders) {
+      const provider = this.providers.get(providerName);
+      if (!provider) continue;
+
       try {
         // Check rate limits before making request
         if (!this.checkRateLimit(provider.name)) {
-          errors.push({
+          const rateLimitError: APIError = {
             provider: provider.name,
             errorType: 'RATE_LIMIT',
             message: 'Rate limit exceeded',
             retryAfter: 60
-          });
+          };
+          errors.push(rateLimitError);
+          this.smartRouter.recordFailure(provider.name, rateLimitError);
           continue;
         }
 
-        console.log(`🔍 Fetching from ${provider.name} for ${trackingNumber}`);
+        console.log(`🔍 Smart Router: Trying ${provider.name} for ${trackingNumber}`);
         const result = await this.fetchFromProvider(provider, trackingNumber, trackingType);
         
         if (result.status === 'success') {
           results.push(result);
+          this.smartRouter.recordSuccess(provider.name);
+          
           // Cache successful results
           this.setCachedData(cacheKey, result);
           
           // If we got a good result from a high-reliability provider, we can stop
           if (provider.reliability > 0.9) {
+            console.log(`✅ High-reliability result from ${provider.name}, stopping search`);
             break;
           }
         } else if (result.status === 'partial') {
           results.push(result);
+          this.smartRouter.recordSuccess(provider.name);
+        } else if (result.status === 'error' && result.error) {
+          errors.push(result.error);
+          this.smartRouter.recordFailure(provider.name, result.error);
         }
 
         this.updateRateLimit(provider.name);
+        
+        // If we have a good result, consider stopping based on strategy
+        if (results.length > 0 && this.shouldStopSearch(routingDecision, results, provider)) {
+          break;
+        }
+
       } catch (error) {
         const apiError: APIError = {
           provider: provider.name,
@@ -284,6 +365,7 @@ export class APIAggregator {
           statusCode: (error as any)?.response?.status
         };
         errors.push(apiError);
+        this.smartRouter.recordFailure(provider.name, apiError);
         console.error(`❌ Error from ${provider.name}:`, apiError);
       }
     }
@@ -362,19 +444,96 @@ export class APIAggregator {
     const timeoutId = setTimeout(() => controller.abort(), provider.timeout);
 
     try {
-      // This is a mock implementation - in real world, you'd call actual APIs
-      const response = await this.mockAPICall(provider, trackingNumber, trackingType);
+      let response: RawTrackingData;
+
+      // Use actual API services for implemented providers
+      if (provider.name === 'maersk' && this.maerskService.isAvailable()) {
+        response = await this.maerskService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'msc' && this.mscService.isAvailable()) {
+        response = await this.mscService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'track-trace' && this.trackTraceService.isAvailable()) {
+        response = await this.trackTraceService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'shipsgo' && this.shipsGoService.isAvailable()) {
+        response = await this.shipsGoService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'searates' && this.searatesService.isAvailable()) {
+        response = await this.searatesService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'cma-cgm' && this.cmaCgmService.isAvailable()) {
+        response = await this.cmaCgmService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'cosco' && this.coscoService.isAvailable()) {
+        response = await this.coscoService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'hapag-lloyd' && this.hapagLloydService.isAvailable()) {
+        response = await this.hapagLloydService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'evergreen' && this.evergreenService.isAvailable()) {
+        response = await this.evergreenService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'one-line' && this.oneLineService.isAvailable()) {
+        response = await this.oneLineService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'yang-ming' && this.yangMingService.isAvailable()) {
+        response = await this.yangMingService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'project44' && this.project44Service.isAvailable()) {
+        response = await this.project44Service.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'zim' && this.zimService.isAvailable()) {
+        response = await this.zimService.trackShipment(
+          trackingNumber, 
+          trackingType || 'container'
+        );
+      } else if (provider.name === 'marine-traffic' && this.marineTrafficService.isAvailable()) {
+        // For Marine Traffic, we need to handle vessel tracking differently
+        response = await this.handleMarineTrafficTracking(trackingNumber, trackingType);
+      } else if (provider.name === 'vessel-finder' && this.vesselFinderService.isAvailable()) {
+        // For Vessel Finder, handle vessel tracking with ETA predictions
+        response = await this.handleVesselFinderTracking(trackingNumber, trackingType);
+      } else {
+        // Fall back to mock for other providers not yet implemented
+        const mockResponse = await this.mockAPICall(provider, trackingNumber, trackingType);
+        response = {
+          provider: provider.name,
+          trackingNumber,
+          data: mockResponse,
+          timestamp: new Date(),
+          reliability: provider.reliability,
+          status: 'success'
+        };
+      }
       
       clearTimeout(timeoutId);
+      return response;
       
-      return {
-        provider: provider.name,
-        trackingNumber,
-        data: response,
-        timestamp: new Date(),
-        reliability: provider.reliability,
-        status: 'success'
-      };
     } catch (error) {
       clearTimeout(timeoutId);
       
@@ -653,5 +812,448 @@ export class APIAggregator {
   clearCache(): void {
     this.cache.clear();
     console.log('🧹 API cache cleared');
+  }
+
+  /**
+   * Get recent failures for smart routing
+   */
+  private getRecentFailures(): string[] {
+    const stats = this.smartRouter.getProviderStats();
+    const recentFailureThreshold = 2; // Consider providers with 2+ recent failures
+    
+    return stats
+      .filter(stat => stat.recentFailures >= recentFailureThreshold)
+      .map(stat => stat.provider);
+  }
+
+  /**
+   * Determine if we should stop searching based on routing strategy
+   */
+  private shouldStopSearch(
+    routingDecision: any,
+    results: RawTrackingData[],
+    currentProvider: APIProviderConfig
+  ): boolean {
+    if (results.length === 0) return false;
+
+    const latestResult = results[results.length - 1];
+    
+    // Always continue if we only have partial results
+    if (latestResult.status === 'partial') return false;
+
+    // Stop strategies based on routing decision
+    switch (routingDecision.fallbackStrategy) {
+      case 'free_first':
+        // For cost optimization, stop after first successful result
+        return true;
+        
+      case 'reliability_first':
+        // For reliability, only stop if we got a high-reliability result
+        return currentProvider.reliability > 0.85;
+        
+      case 'paid_first':
+      default:
+        // Balanced approach: stop if we have a decent result from a decent provider
+        return currentProvider.reliability > 0.75;
+    }
+  }
+
+  /**
+   * Handle Marine Traffic API tracking for vessel information
+   */
+  private async handleMarineTrafficTracking(
+    trackingNumber: string, 
+    trackingType?: TrackingType
+  ): Promise<RawTrackingData> {
+    try {
+      // For Marine Traffic, we need to determine if this is a vessel IMO or container tracking
+      let vesselData = null;
+      let portCongestion = null;
+
+      // Try to get vessel position if trackingNumber looks like an IMO
+      if (this.isIMONumber(trackingNumber)) {
+        vesselData = await this.marineTrafficService.getVesselPosition(trackingNumber);
+      }
+
+      // Get port congestion data for enhanced tracking information
+      portCongestion = await this.marineTrafficService.getPortCongestion();
+
+      // Transform Marine Traffic data to our standard format
+      const transformedData = this.transformMarineTrafficData(
+        trackingNumber,
+        vesselData,
+        portCongestion
+      );
+
+      return {
+        provider: 'marine-traffic',
+        trackingNumber,
+        data: transformedData,
+        timestamp: new Date(),
+        reliability: 0.70, // Marine Traffic reliability score
+        status: vesselData || portCongestion ? 'success' : 'error',
+        error: !vesselData && !portCongestion ? {
+          provider: 'marine-traffic',
+          errorType: 'NOT_FOUND',
+          message: 'No vessel or port information found'
+        } : undefined
+      };
+
+    } catch (error) {
+      return {
+        provider: 'marine-traffic',
+        trackingNumber,
+        data: null,
+        timestamp: new Date(),
+        reliability: 0,
+        status: 'error',
+        error: {
+          provider: 'marine-traffic',
+          errorType: this.categorizeError(error),
+          message: error instanceof Error ? error.message : 'Marine Traffic API error'
+        }
+      };
+    }
+  }
+
+  /**
+   * Check if a tracking number looks like an IMO number
+   */
+  private isIMONumber(trackingNumber: string): boolean {
+    // IMO numbers are 7 digits, sometimes prefixed with "IMO"
+    return /^(IMO)?[0-9]{7}$/.test(trackingNumber.replace(/\s/g, ''));
+  }
+
+  /**
+   * Transform Marine Traffic data to our standard shipment format
+   */
+  private transformMarineTrafficData(
+    trackingNumber: string,
+    vesselData: any,
+    portCongestion: any[]
+  ): any {
+    const timeline = [];
+    let status = 'Unknown';
+    let vessel = null;
+
+    if (vesselData) {
+      // Create timeline from vessel data
+      timeline.push({
+        id: `vessel-${Date.now()}`,
+        timestamp: vesselData.timestamp,
+        status: vesselData.status || 'At Sea',
+        location: vesselData.destination || 'Unknown Location',
+        description: `Vessel ${vesselData.name} - ${vesselData.status}`,
+        isCompleted: false,
+        coordinates: vesselData.position
+      });
+
+      status = vesselData.status || 'At Sea';
+      vessel = {
+        name: vesselData.name,
+        imo: vesselData.imo,
+        voyage: 'N/A',
+        currentPosition: vesselData.position,
+        eta: vesselData.eta,
+        speed: vesselData.speed,
+        heading: vesselData.heading,
+        destination: vesselData.destination,
+        status: vesselData.status
+      };
+    }
+
+    // Add port congestion information to timeline if available
+    if (portCongestion && portCongestion.length > 0) {
+      portCongestion.forEach((port, index) => {
+        timeline.push({
+          id: `port-${port.portCode}-${index}`,
+          timestamp: port.lastUpdated,
+          status: `Port Congestion: ${port.congestionLevel}`,
+          location: port.portName,
+          description: `${port.portName} - Congestion Level: ${port.congestionLevel}, Waiting: ${port.vesselsWaiting} vessels`,
+          isCompleted: true,
+          coordinates: null // Port coordinates would need to be added
+        });
+      });
+    }
+
+    return {
+      trackingNumber,
+      carrier: 'Marine Traffic',
+      service: 'Vessel Tracking',
+      status,
+      timeline: timeline.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      vessel,
+      portCongestion,
+      lastUpdated: new Date()
+    };
+  }
+
+  /**
+   * Handle Vessel Finder API tracking for vessel information with ETA predictions
+   */
+  private async handleVesselFinderTracking(
+    trackingNumber: string, 
+    trackingType?: TrackingType
+  ): Promise<RawTrackingData> {
+    try {
+      // For Vessel Finder, we need to determine if this is a vessel IMO or container tracking
+      let vesselData = null;
+      let routeData = null;
+      let etaData = null;
+      let portNotifications = null;
+
+      // Try to get vessel position if trackingNumber looks like an IMO
+      if (this.isIMONumber(trackingNumber)) {
+        const [position, route, eta, notifications] = await Promise.allSettled([
+          this.vesselFinderService.getVesselPosition(trackingNumber),
+          this.vesselFinderService.getVesselRoute(trackingNumber),
+          this.vesselFinderService.getVesselETA(trackingNumber),
+          this.vesselFinderService.getPortNotifications(undefined, trackingNumber)
+        ]);
+
+        vesselData = position.status === 'fulfilled' ? position.value : null;
+        routeData = route.status === 'fulfilled' ? route.value : null;
+        etaData = eta.status === 'fulfilled' ? eta.value : null;
+        portNotifications = notifications.status === 'fulfilled' ? notifications.value : null;
+      }
+
+      // Transform Vessel Finder data to our standard format
+      const transformedData = this.transformVesselFinderData(
+        trackingNumber,
+        vesselData,
+        routeData,
+        etaData,
+        portNotifications
+      );
+
+      return {
+        provider: 'vessel-finder',
+        trackingNumber,
+        data: transformedData,
+        timestamp: new Date(),
+        reliability: 0.72, // Vessel Finder reliability score
+        status: vesselData || routeData ? 'success' : 'error',
+        error: !vesselData && !routeData ? {
+          provider: 'vessel-finder',
+          errorType: 'NOT_FOUND',
+          message: 'No vessel information found'
+        } : undefined
+      };
+
+    } catch (error) {
+      return {
+        provider: 'vessel-finder',
+        trackingNumber,
+        data: null,
+        timestamp: new Date(),
+        reliability: 0,
+        status: 'error',
+        error: {
+          provider: 'vessel-finder',
+          errorType: this.categorizeError(error),
+          message: error instanceof Error ? error.message : 'Vessel Finder API error'
+        }
+      };
+    }
+  }
+
+  /**
+   * Transform Vessel Finder data to our standard shipment format
+   */
+  private transformVesselFinderData(
+    trackingNumber: string,
+    vesselData: any,
+    routeData: any,
+    etaData: any,
+    portNotifications: any
+  ): any {
+    const timeline = [];
+    let status = 'Unknown';
+    let vessel = null;
+
+    if (vesselData) {
+      // Create timeline from vessel data
+      timeline.push({
+        id: `vessel-${Date.now()}`,
+        timestamp: vesselData.timestamp,
+        status: vesselData.status || 'At Sea',
+        location: vesselData.destination || 'Unknown Location',
+        description: `Vessel ${vesselData.name} - ${vesselData.status}`,
+        isCompleted: false,
+        coordinates: vesselData.position
+      });
+
+      status = vesselData.status || 'At Sea';
+      vessel = {
+        name: vesselData.name,
+        imo: vesselData.imo,
+        voyage: 'N/A',
+        currentPosition: vesselData.position,
+        eta: vesselData.eta || etaData?.estimatedArrival,
+        speed: vesselData.speed,
+        heading: vesselData.heading,
+        destination: vesselData.destination,
+        status: vesselData.status
+      };
+    }
+
+    // Add route waypoints to timeline if available
+    if (routeData && routeData.waypoints) {
+      routeData.waypoints.forEach((waypoint: any, index: number) => {
+        timeline.push({
+          id: `waypoint-${index}`,
+          timestamp: waypoint.timestamp,
+          status: waypoint.event || 'Waypoint',
+          location: waypoint.port?.name || 'At Sea',
+          description: `${waypoint.event || 'Waypoint'} - ${waypoint.port?.name || 'Position update'}`,
+          isCompleted: true,
+          coordinates: waypoint.position
+        });
+      });
+    }
+
+    // Add port notifications to timeline if available
+    if (portNotifications) {
+      // Add arrivals
+      portNotifications.arrivals.forEach((arrival: any, index: number) => {
+        timeline.push({
+          id: `arrival-${index}`,
+          timestamp: arrival.estimatedArrival,
+          status: 'Expected Arrival',
+          location: arrival.berth || 'Port',
+          description: `Expected arrival at ${arrival.berth || 'port'}`,
+          isCompleted: false,
+          coordinates: null
+        });
+
+        if (arrival.actualArrival) {
+          timeline.push({
+            id: `actual-arrival-${index}`,
+            timestamp: arrival.actualArrival,
+            status: 'Arrived',
+            location: arrival.berth || 'Port',
+            description: `Arrived at ${arrival.berth || 'port'}`,
+            isCompleted: true,
+            coordinates: null
+          });
+        }
+      });
+
+      // Add departures
+      portNotifications.departures.forEach((departure: any, index: number) => {
+        timeline.push({
+          id: `departure-${index}`,
+          timestamp: departure.estimatedDeparture,
+          status: 'Expected Departure',
+          location: 'Port',
+          description: `Expected departure to ${departure.destination || 'next port'}`,
+          isCompleted: false,
+          coordinates: null
+        });
+
+        if (departure.actualDeparture) {
+          timeline.push({
+            id: `actual-departure-${index}`,
+            timestamp: departure.actualDeparture,
+            status: 'Departed',
+            location: 'Port',
+            description: `Departed to ${departure.destination || 'next port'}`,
+            isCompleted: true,
+            coordinates: null
+          });
+        }
+      });
+    }
+
+    return {
+      trackingNumber,
+      carrier: 'Vessel Finder',
+      service: 'Vessel Tracking',
+      status,
+      timeline: timeline.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      vessel,
+      route: routeData,
+      etaPredictions: etaData,
+      portNotifications,
+      lastUpdated: new Date()
+    };
+  }
+
+  /**
+   * Get vessel tracking information for enhanced shipment data
+   */
+  async getVesselTrackingInfo(imo: string): Promise<{
+    position?: any;
+    route?: any;
+    congestion?: any[];
+    etaPredictions?: any;
+    portNotifications?: any;
+  }> {
+    const results: any = {};
+
+    // Try Marine Traffic first
+    if (this.marineTrafficService.isAvailable()) {
+      try {
+        const [position, route, congestion] = await Promise.allSettled([
+          this.marineTrafficService.getVesselPosition(imo),
+          this.marineTrafficService.getVesselRoute(imo),
+          this.marineTrafficService.getPortCongestion()
+        ]);
+
+        results.position = position.status === 'fulfilled' ? position.value : null;
+        results.route = route.status === 'fulfilled' ? route.value : null;
+        results.congestion = congestion.status === 'fulfilled' ? congestion.value : [];
+      } catch (error) {
+        console.error('Error getting Marine Traffic vessel info:', error);
+      }
+    }
+
+    // Try Vessel Finder for enhanced data
+    if (this.vesselFinderService.isAvailable()) {
+      try {
+        const [position, route, eta, notifications] = await Promise.allSettled([
+          this.vesselFinderService.getVesselPosition(imo),
+          this.vesselFinderService.getVesselRoute(imo),
+          this.vesselFinderService.getVesselETA(imo),
+          this.vesselFinderService.getPortNotifications(undefined, imo)
+        ]);
+
+        // Use Vessel Finder data if Marine Traffic didn't provide it
+        if (!results.position && position.status === 'fulfilled') {
+          results.position = position.value;
+        }
+        if (!results.route && route.status === 'fulfilled') {
+          results.route = route.value;
+        }
+        
+        // Add Vessel Finder specific data
+        results.etaPredictions = eta.status === 'fulfilled' ? eta.value : null;
+        results.portNotifications = notifications.status === 'fulfilled' ? notifications.value : null;
+      } catch (error) {
+        console.error('Error getting Vessel Finder vessel info:', error);
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Get smart routing statistics for monitoring
+   */
+  getSmartRoutingStats(): {
+    providerStats: Array<{
+      provider: string;
+      cost: number;
+      reliability: number;
+      recentFailures: number;
+      lastFailure?: Date;
+    }>;
+    routingDecisions: number;
+  } {
+    return {
+      providerStats: this.smartRouter.getProviderStats(),
+      routingDecisions: 0 // Could track this if needed
+    };
   }
 }

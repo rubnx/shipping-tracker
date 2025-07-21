@@ -133,6 +133,49 @@ export interface VesselInfo {
     currentPosition?: LatLng;
     eta?: Date;
     ata?: Date;
+    speed?: number;
+    heading?: number;
+    destination?: string;
+    draught?: number;
+    length?: number;
+    width?: number;
+    flag?: string;
+    type?: string;
+    status?: string;
+}
+export interface VesselPosition {
+    imo: string;
+    mmsi?: string;
+    name: string;
+    position: LatLng;
+    timestamp: Date;
+    speed?: number;
+    heading?: number;
+    status?: string;
+    destination?: string;
+    eta?: Date;
+}
+export interface PortCongestion {
+    portCode: string;
+    portName: string;
+    congestionLevel: 'low' | 'medium' | 'high' | 'critical';
+    averageWaitTime: number;
+    vesselsWaiting: number;
+    lastUpdated: Date;
+}
+export interface VesselRoute {
+    imo: string;
+    name: string;
+    route: LatLng[];
+    waypoints: VesselWaypoint[];
+    estimatedArrival?: Date;
+    actualArrival?: Date;
+}
+export interface VesselWaypoint {
+    position: LatLng;
+    timestamp: Date;
+    port?: Port;
+    event?: string;
 }
 export interface RouteInfo {
     origin: Port;
@@ -170,6 +213,9 @@ export interface APIProviderConfig {
     reliability: number;
     timeout: number;
     retryAttempts: number;
-    supportedTypes: TrackingType[];
+    supportedTypes: (TrackingType | 'tracking' | 'express' | 'vessel')[];
+    coverage: ('global' | 'asia-pacific' | 'europe' | 'americas' | 'mediterranean' | 'usa' | 'canada' | 'uk')[];
+    cost: 'free' | 'freemium' | 'paid';
+    aggregator?: boolean;
 }
 //# sourceMappingURL=index.d.ts.map

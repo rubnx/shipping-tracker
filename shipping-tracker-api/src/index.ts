@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middleware/errorHandler';
 import { trackingRoutes } from './routes/tracking';
-import { dashboardRoutes } from './routes/dashboard';
+import dashboardRoutes from './routes/dashboard';
 import { config, validateEnvironment } from './config/environment';
 import { testConnection } from './config/database';
 import { runMigrations } from './database/migrator';

@@ -9,6 +9,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const tracking_1 = require("./routes/tracking");
+const dashboard_1 = __importDefault(require("./routes/dashboard"));
 const environment_1 = require("./config/environment");
 const database_1 = require("./config/database");
 const migrator_1 = require("./database/migrator");
@@ -50,6 +51,7 @@ app.get('/health', (req, res) => {
 });
 // API routes
 app.use('/api/tracking', tracking_1.trackingRoutes);
+app.use('/api/dashboard', dashboard_1.default);
 // 404 handler
 app.use('*', (req, res) => {
     res.status(404).json({

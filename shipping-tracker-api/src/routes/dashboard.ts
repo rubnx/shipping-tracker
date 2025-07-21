@@ -1,204 +1,270 @@
-import { Router, Request, Response } from 'express';
-import { asyncHandler } from '../middleware/errorHandler';
-import { ApiResponse } from '../types';
-import { TrackingService } from '../services/TrackingService';
+import express from 'express';
 import { APIProviderDashboard } from '../services/APIProviderDashboard';
+import { APIAggregator } from '../services/APIAggregator';
+import { SmartContainerRouter } from '../services/SmartContainerRouter';
 
-const router = Router();
-const trackingService = new TrackingService();
+const router = express.Router();
 
-// GET /api/dashboard/providers
-// Get comprehensive provider status dashboard
-router.get('/providers', asyncHandler(async (req: Request, res: Response) => {
-  const providerHealth = trackingService.getProviderHealth();
-  
-  // Create dashboard instance (in real implementation, this would be injected)
-  const dashboard = new APIProviderDashboard(new Map());
-  const stats = dashboard.getDashboardStats();
-  const providersByCategory = dashboard.getProvidersByCategory();
-  const recommendations = dashboard.getRecommendations();
+// Initialize services
+const aggregator = new APIAggregator();
+const smartRouter = new SmartContainerRouter();
+const dashboard = new APIProviderDashboard(aggregator, smartRouter);
 
-  res.json({
-    success: true,
-    data: {
-      overview: {
-        totalProviders: stats.totalProviders,
-        activeProviders: stats.activeProviders,
-        averageReliability: stats.averageReliability,
-        overallHealth: providerHealth.overallHealth,
-        successRateToday: stats.successRateToday,
-        totalRequestsToday: stats.totalRequestsToday
-      },
-      costBreakdown: stats.costBreakdown,
-      coverageStats: stats.coverageStats,
-      providersByCategory,
-      recommendations,
-      lastUpdated: new Date().toISOString()
-    },
-    message: 'Provider dashboard data retrieved successfully',
-    timestamp: new Date().toISOString()
-  } as ApiResponse);
-}));
-
-// GET /api/dashboard/providers/:category
-// Get providers by specific category
-router.get('/providers/:category', asyncHandler(async (req: Request, res: Response) => {
-  const { category } = req.params;
-  
-  const dashboard = new APIProviderDashboard(new Map());
-  const providersByCategory = dashboard.getProvidersByCategory();
-  
-  const validCategories = Object.keys(providersByCategory);
-  const categoryKey = validCategories.find(key => 
-    key.toLowerCase().replace(/[^a-z]/g, '') === category.toLowerCase().replace(/[^a-z]/g, '')
-  );
-  
-  if (!categoryKey) {
-    return res.status(404).json({
+/**
+ * GET /api/dashboard/summary
+ * Get dashboard summary with key metrics
+ */
+router.get('/summary', async (req, res) => {
+  try {
+    const summary = await dashboard.getDashboardSummary();
+    res.json({
+      success: true,
+      data: summary,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('❌ Dashboard summary error:', error);
+    res.status(500).json({
       success: false,
-      error: `Category '${category}' not found`,
-      availableCategories: validCategories,
-      timestamp: new Date().toISOString()
-    } as ApiResponse);
+      error: 'Failed to fetch dashboard summary',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
-  
-  res.json({
-    success: true,
-    data: {
-      category: categoryKey,
-      providers: providersByCategory[categoryKey],
-      count: providersByCategory[categoryKey].length
-    },
-    message: `Providers for category '${categoryKey}' retrieved successfully`,
-    timestamp: new Date().toISOString()
-  } as ApiResponse);
-}));
+});
 
-// GET /api/dashboard/stats
-// Get high-level statistics
-router.get('/stats', asyncHandler(async (req: Request, res: Response) => {
-  const dashboard = new APIProviderDashboard(new Map());
-  const stats = dashboard.getDashboardStats();
-  const providerHealth = trackingService.getProviderHealth();
-  
-  res.json({
-    success: true,
-    data: {
-      providers: {
-        total: stats.totalProviders,
-        active: stats.activeProviders,
-        inactive: stats.totalProviders - stats.activeProviders,
-        averageReliability: Math.round(stats.averageReliability * 100) / 100
-      },
-      performance: {
-        overallHealth: providerHealth.overallHealth,
-        successRateToday: Math.round(stats.successRateToday * 100 * 100) / 100, // percentage
-        totalRequestsToday: stats.totalRequestsToday
-      },
-      coverage: {
-        costBreakdown: stats.costBreakdown,
-        geographic: stats.coverageStats
-      },
-      timestamp: new Date().toISOString()
-    },
-    message: 'Dashboard statistics retrieved successfully',
-    timestamp: new Date().toISOString()
-  } as ApiResponse);
-}));
-
-// GET /api/dashboard/recommendations
-// Get recommendations for improving the API ecosystem
-router.get('/recommendations', asyncHandler(async (req: Request, res: Response) => {
-  const dashboard = new APIProviderDashboard(new Map());
-  const recommendations = dashboard.getRecommendations();
-  
-  res.json({
-    success: true,
-    data: {
-      recommendations,
-      count: recommendations.length,
-      priority: recommendations.length > 0 ? 'high' : 'low'
-    },
-    message: 'Recommendations retrieved successfully',
-    timestamp: new Date().toISOString()
-  } as ApiResponse);
-}));
-
-// GET /api/dashboard/coverage
-// Get detailed coverage analysis
-router.get('/coverage', asyncHandler(async (req: Request, res: Response) => {
-  const dashboard = new APIProviderDashboard(new Map());
-  const providersByCategory = dashboard.getProvidersByCategory();
-  
-  // Analyze coverage by tracking type
-  const coverageAnalysis = {
-    trackingTypes: {
-      container: 0,
-      booking: 0,
-      bol: 0,
-      tracking: 0,
-      express: 0,
-      vessel: 0
-    },
-    geographic: {
-      global: 0,
-      'asia-pacific': 0,
-      europe: 0,
-      americas: 0,
-      mediterranean: 0,
-      usa: 0,
-      canada: 0,
-      uk: 0
-    },
-    costTiers: {
-      free: { count: 0, providers: [] as string[] },
-      freemium: { count: 0, providers: [] as string[] },
-      paid: { count: 0, providers: [] as string[] }
-    }
-  };
-  
-  // Calculate coverage statistics
-  Object.values(providersByCategory).flat().forEach(provider => {
-    // Count tracking types
-    provider.supportedTypes.forEach(type => {
-      if (type in coverageAnalysis.trackingTypes) {
-        coverageAnalysis.trackingTypes[type as keyof typeof coverageAnalysis.trackingTypes]++;
-      }
+/**
+ * GET /api/dashboard/providers
+ * Get detailed status of all API providers
+ */
+router.get('/providers', async (req, res) => {
+  try {
+    const providers = await dashboard.getProviderStatuses();
+    res.json({
+      success: true,
+      data: providers,
+      timestamp: new Date()
     });
-    
-    // Count geographic coverage
-    provider.coverage.forEach(region => {
-      if (region in coverageAnalysis.geographic) {
-        coverageAnalysis.geographic[region as keyof typeof coverageAnalysis.geographic]++;
-      }
+  } catch (error) {
+    console.error('❌ Provider status error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch provider statuses',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
-    
-    // Count cost tiers
-    if (provider.cost in coverageAnalysis.costTiers) {
-      coverageAnalysis.costTiers[provider.cost].count++;
-      coverageAnalysis.costTiers[provider.cost].providers.push(provider.name);
-    }
-  });
-  
-  res.json({
-    success: true,
-    data: {
-      summary: {
-        totalProviders: Object.values(providersByCategory).flat().length,
-        categoriesCount: Object.keys(providersByCategory).length
-      },
-      trackingTypeCoverage: coverageAnalysis.trackingTypes,
-      geographicCoverage: coverageAnalysis.geographic,
-      costTierBreakdown: coverageAnalysis.costTiers,
-      providersByCategory: Object.keys(providersByCategory).map(category => ({
-        category,
-        count: providersByCategory[category].length,
-        activeCount: providersByCategory[category].filter(p => p.status === 'active').length
-      }))
-    },
-    message: 'Coverage analysis retrieved successfully',
-    timestamp: new Date().toISOString()
-  } as ApiResponse);
-}));
+  }
+});
 
-export { router as dashboardRoutes };
+/**
+ * GET /api/dashboard/health
+ * Get overall API health metrics
+ */
+router.get('/health', async (req, res) => {
+  try {
+    const health = await dashboard.getHealthMetrics();
+    res.json({
+      success: true,
+      data: health,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('❌ Health metrics error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch health metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * GET /api/dashboard/analytics/:provider
+ * Get detailed analytics for a specific provider
+ */
+router.get('/analytics/:provider', async (req, res) => {
+  try {
+    const { provider } = req.params;
+    const analytics = await dashboard.getProviderAnalytics(provider);
+    res.json({
+      success: true,
+      data: analytics,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error(`❌ Analytics error for ${req.params.provider}:`, error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch provider analytics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * GET /api/dashboard/recommendations
+ * Get cost optimization recommendations
+ */
+router.get('/recommendations', async (req, res) => {
+  try {
+    const recommendations = await dashboard.getCostOptimizationRecommendations();
+    res.json({
+      success: true,
+      data: recommendations,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('❌ Recommendations error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch recommendations',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * GET /api/dashboard/costs
+ * Get cost analysis and breakdown
+ */
+router.get('/costs', async (req, res) => {
+  try {
+    const providers = await dashboard.getProviderStatuses();
+    const costAnalysis = {
+      totalMonthlyCost: providers.reduce((sum, p) => sum + p.cost.monthlyCost, 0),
+      totalRequests: providers.reduce((sum, p) => sum + p.cost.monthlyUsage, 0),
+      averageCostPerRequest: 0,
+      costByTier: {
+        free: 0,
+        freemium: 0,
+        paid: 0,
+        premium: 0
+      },
+      topExpensiveProviders: providers
+        .sort((a, b) => b.cost.monthlyCost - a.cost.monthlyCost)
+        .slice(0, 5)
+        .map(p => ({
+          name: p.name,
+          cost: p.cost.monthlyCost,
+          requests: p.cost.monthlyUsage,
+          costPerRequest: p.cost.costPerRequest
+        })),
+      costTrends: [] // Would be populated with historical data
+    };
+
+    // Calculate cost by tier
+    providers.forEach(p => {
+      costAnalysis.costByTier[p.cost.tier] += p.cost.monthlyCost;
+    });
+
+    // Calculate average cost per request
+    const totalRequests = costAnalysis.totalRequests;
+    costAnalysis.averageCostPerRequest = totalRequests > 0 
+      ? costAnalysis.totalMonthlyCost / totalRequests 
+      : 0;
+
+    res.json({
+      success: true,
+      data: costAnalysis,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('❌ Cost analysis error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch cost analysis',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * POST /api/dashboard/alerts/configure
+ * Configure alert thresholds
+ */
+router.post('/alerts/configure', async (req, res) => {
+  try {
+    const { responseTime, errorRate, uptime } = req.body;
+    
+    // Validate thresholds
+    if (responseTime && (responseTime < 1000 || responseTime > 60000)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Response time threshold must be between 1000ms and 60000ms'
+      });
+    }
+    
+    if (errorRate && (errorRate < 0 || errorRate > 1)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Error rate threshold must be between 0 and 1'
+      });
+    }
+    
+    if (uptime && (uptime < 0 || uptime > 1)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Uptime threshold must be between 0 and 1'
+      });
+    }
+
+    // In a real implementation, this would update the dashboard configuration
+    console.log('🔧 Alert thresholds updated:', { responseTime, errorRate, uptime });
+    
+    res.json({
+      success: true,
+      message: 'Alert thresholds updated successfully',
+      data: { responseTime, errorRate, uptime }
+    });
+  } catch (error) {
+    console.error('❌ Alert configuration error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to configure alerts',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * GET /api/dashboard/performance
+ * Get performance metrics across all providers
+ */
+router.get('/performance', async (req, res) => {
+  try {
+    const providers = await dashboard.getProviderStatuses();
+    const performanceMetrics = {
+      averageResponseTime: providers.reduce((sum, p) => sum + p.responseTime, 0) / providers.length,
+      fastestProvider: providers.reduce((fastest, p) => 
+        p.responseTime < fastest.responseTime ? p : fastest
+      ),
+      slowestProvider: providers.reduce((slowest, p) => 
+        p.responseTime > slowest.responseTime ? p : slowest
+      ),
+      reliabilityDistribution: {
+        excellent: providers.filter(p => p.reliability >= 0.95).length,
+        good: providers.filter(p => p.reliability >= 0.85 && p.reliability < 0.95).length,
+        fair: providers.filter(p => p.reliability >= 0.75 && p.reliability < 0.85).length,
+        poor: providers.filter(p => p.reliability < 0.75).length
+      },
+      responseTimeDistribution: {
+        fast: providers.filter(p => p.responseTime < 1000).length,
+        medium: providers.filter(p => p.responseTime >= 1000 && p.responseTime < 3000).length,
+        slow: providers.filter(p => p.responseTime >= 3000).length
+      }
+    };
+
+    res.json({
+      success: true,
+      data: performanceMetrics,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('❌ Performance metrics error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch performance metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+export default router;

@@ -6,9 +6,20 @@ export declare const config: {
     };
     apiKeys: {
         maersk: string;
-        hapagLloyd: string;
         msc: string;
         cmaCgm: string;
+        cosco: string;
+        hapagLloyd: string;
+        evergreen: string;
+        oneLine: string;
+        yangMing: string;
+        zim: string;
+        shipsgo: string;
+        searates: string;
+        project44: string;
+        marineTraffic: string;
+        vesselFinder: string;
+        trackTrace: string;
     };
     database: {
         url: string;

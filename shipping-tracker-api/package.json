@@ -10,8 +10,14 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:comprehensive": "ts-node src/scripts/runComprehensiveTests.ts",
+    "test:all-apis": "jest src/test/AllAPIsIntegration.test.ts --testTimeout=60000",
+    "test:performance": "jest src/test/PerformanceMonitoring.test.ts --testTimeout=300000",
+    "test:full-suite": "ts-node src/scripts/runAllTests.ts",
     "test:repositories": "ts-node src/test/repositories.test.ts",
     "test:db": "node test-database.js",
+    "monitor:apis": "ts-node src/scripts/monitorAPIs.ts",
+    "monitor:report": "ts-node src/scripts/monitorAPIs.ts --report",
     "migrate": "ts-node src/scripts/migrate.ts"
   },
   "keywords": [
@@ -23,6 +29,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/express": "^4.17.23",
+    "axios": "^1.10.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
     "express": "^4.21.2",
@@ -32,6 +39,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.4",
     "@types/cors": "^2.8.19",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.14",

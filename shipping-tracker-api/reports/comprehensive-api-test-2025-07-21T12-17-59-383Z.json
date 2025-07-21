@@ -1,0 +1,453 @@
+{
+  "summary": {
+    "totalAPIs": 0,
+    "workingAPIs": 0,
+    "averageReliability": 0,
+    "totalFeatures": 0,
+    "testTimestamp": "2025-07-21T12:17:59.382Z"
+  },
+  "apiResults": [],
+  "realContainerResults": [
+    {
+      "containerNumber": "MAEU1234567",
+      "carrier": "maersk",
+      "success": false,
+      "responseTime": 3,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "MAEU7654321",
+      "carrier": "maersk",
+      "success": false,
+      "responseTime": 2,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "MAEU9876543",
+      "carrier": "maersk",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "MSCU1234567",
+      "carrier": "msc",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "MSCU7654321",
+      "carrier": "msc",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "MSCU5432109",
+      "carrier": "msc",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "CMAU1234567",
+      "carrier": "cma-cgm",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "CMAU7654321",
+      "carrier": "cma-cgm",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "CMAU8765432",
+      "carrier": "cma-cgm",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "COSU1234567",
+      "carrier": "cosco",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "COSU7654321",
+      "carrier": "cosco",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "COSU2468135",
+      "carrier": "cosco",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "HLCU1234567",
+      "carrier": "hapag-lloyd",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "HLCU7654321",
+      "carrier": "hapag-lloyd",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "HLCU1357924",
+      "carrier": "hapag-lloyd",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "EGLV1234567",
+      "carrier": "evergreen",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "EGLV7654321",
+      "carrier": "evergreen",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "EGLV9753186",
+      "carrier": "evergreen",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "ONEY1234567",
+      "carrier": "one-line",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "ONEY7654321",
+      "carrier": "one-line",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "ONEY8642097",
+      "carrier": "one-line",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "YMLU1234567",
+      "carrier": "yang-ming",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "YMLU7654321",
+      "carrier": "yang-ming",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "YMLU3691470",
+      "carrier": "yang-ming",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "ZIMU1234567",
+      "carrier": "zim",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "ZIMU7654321",
+      "carrier": "zim",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "ZIMU7410852",
+      "carrier": "zim",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "TEST1234567",
+      "carrier": "project44",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "TEST7654321",
+      "carrier": "project44",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "TEST9630741",
+      "carrier": "project44",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "SHIP1234567",
+      "carrier": "shipsgo",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "SHIP7654321",
+      "carrier": "shipsgo",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "SHIP1472583",
+      "carrier": "shipsgo",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "RATE1234567",
+      "carrier": "searates",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "RATE7654321",
+      "carrier": "searates",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "RATE8529630",
+      "carrier": "searates",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "TRCK1234567",
+      "carrier": "track-trace",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "TRCK7654321",
+      "carrier": "track-trace",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "TRCK7539514",
+      "carrier": "track-trace",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "MTRK1234567",
+      "carrier": "marine-traffic",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "MTRK7654321",
+      "carrier": "marine-traffic",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "MTRK9517532",
+      "carrier": "marine-traffic",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "VFND1234567",
+      "carrier": "vessel-finder",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "VFND7654321",
+      "carrier": "vessel-finder",
+      "success": false,
+      "responseTime": 1,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    },
+    {
+      "containerNumber": "VFND8642097",
+      "carrier": "vessel-finder",
+      "success": false,
+      "responseTime": 0,
+      "dataQuality": 0,
+      "error": "Unable to find tracking information. Please verify the tracking number and try again."
+    }
+  ],
+  "performanceResults": {
+    "totalRequests": 50,
+    "successfulRequests": 0,
+    "averageResponseTime": 2003.12,
+    "maxResponseTime": 2005,
+    "minResponseTime": 2001,
+    "throughput": 1.9965659066405783,
+    "errorRate": 1
+  },
+  "stressTestResults": {
+    "totalRequests": 30,
+    "successfulRequests": 0,
+    "averageResponseTime": 2001.7666666666667,
+    "maxResponseTime": 2003,
+    "minResponseTime": 2000,
+    "throughput": 0.48710787815808276,
+    "errorRate": 1
+  },
+  "reliabilityResults": [],
+  "endToEndResults": {
+    "totalTests": 10,
+    "passedTests": 5,
+    "failedTests": 5,
+    "testResults": [
+      {
+        "testName": "Container Format Detection",
+        "success": true,
+        "duration": 1
+      },
+      {
+        "testName": "Multi-provider Fallback",
+        "success": false,
+        "duration": 0,
+        "error": "Unable to find tracking information. Please verify the tracking number and try again."
+      },
+      {
+        "testName": "Booking Number Tracking",
+        "success": false,
+        "duration": 0,
+        "error": "Unable to find tracking information. Please verify the tracking number and try again."
+      },
+      {
+        "testName": "Bill of Lading Tracking",
+        "success": false,
+        "duration": 1,
+        "error": "Unable to find tracking information. Please verify the tracking number and try again."
+      },
+      {
+        "testName": "Performance Optimization",
+        "success": true,
+        "duration": 0
+      },
+      {
+        "testName": "Error Handling",
+        "success": true,
+        "duration": 0
+      },
+      {
+        "testName": "Batch Processing",
+        "success": true,
+        "duration": 42
+      },
+      {
+        "testName": "Rate Limiting Compliance",
+        "success": true,
+        "duration": 6
+      },
+      {
+        "testName": "Data Quality Validation",
+        "success": false,
+        "duration": 0,
+        "error": "Unable to find tracking information. Please verify the tracking number and try again."
+      },
+      {
+        "testName": "Cross-Carrier Compatibility",
+        "success": false,
+        "duration": 1
+      }
+    ]
+  },
+  "monitoringResults": []
+}
