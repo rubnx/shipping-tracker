@@ -4,6 +4,10 @@ import './index.css'
 import App from './App.tsx'
 import { QueryProvider } from './providers/QueryProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { initSentry } from './utils/sentry'
+
+// Initialize Sentry for error tracking
+initSentry();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -6,6 +6,8 @@ import type {
 } from '../types';
 import { mockAPIServer } from './mockServer';
 import { parseHttpError, withTimeout, retryWithBackoff } from '../utils';
+import { performanceMonitor } from '../services/PerformanceMonitoringService';
+import { addBreadcrumb, captureException } from '../utils/sentry';
 
 // API configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
@@ -31,36 +33,71 @@ class APIClient {
     options: RequestInit = {}
   ): Promise<APIResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
+    const method = options.method || 'GET';
     
-    try {
-      const response = await withTimeout(
-        fetch(url, {
-          ...options,
-          headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-          },
-        }),
-        this.timeout
-      );
+    // Track API call performance
+    return performanceMonitor.trackAPICall(
+      endpoint,
+      method,
+      async () => {
+        addBreadcrumb(
+          `API request: ${method} ${endpoint}`,
+          'http',
+          'info'
+        );
 
-      if (!response.ok) {
-        const errorData = {
-          response: {
-            status: response.status,
-            statusText: response.statusText,
-            data: await response.json().catch(() => ({})),
+        try {
+          const response = await withTimeout(
+            fetch(url, {
+              ...options,
+              headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+              },
+            }),
+            this.timeout
+          );
+
+          if (!response.ok) {
+            const errorData = {
+              response: {
+                status: response.status,
+                statusText: response.statusText,
+                data: await response.json().catch(() => ({})),
+              }
+            };
+            
+            addBreadcrumb(
+              `API error: ${method} ${endpoint} - ${response.status}`,
+              'http',
+              'error'
+            );
+            
+            throw errorData;
           }
-        };
-        throw errorData;
-      }
 
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      // Parse and throw standardized error
-      throw parseHttpError(error);
-    }
+          const data = await response.json();
+          
+          addBreadcrumb(
+            `API success: ${method} ${endpoint}`,
+            'http',
+            'info'
+          );
+          
+          return data;
+        } catch (error) {
+          // Capture exception with context
+          captureException(error as Error, {
+            endpoint,
+            method,
+            url,
+          });
+          
+          // Parse and throw standardized error
+          throw parseHttpError(error);
+        }
+      }
+    );
   }
 
   // Validate tracking number
