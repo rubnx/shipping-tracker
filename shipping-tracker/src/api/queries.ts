@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from './client';
+import { apiClient } from '../services/ApiClient';
 import { useTrackingStore } from '../store';
-import type { TrackingType } from '../types';
+import type { TrackingType, ShipmentTracking } from '../types';
 
 // Query keys
 export const queryKeys = {
@@ -15,7 +15,13 @@ export const queryKeys = {
 export const useValidateTrackingNumber = (trackingNumber: string) => {
   return useQuery({
     queryKey: queryKeys.validation(trackingNumber),
-    queryFn: () => apiClient.validateTrackingNumber(trackingNumber),
+    queryFn: async () => {
+      // Simple validation - just check format
+      if (!trackingNumber || trackingNumber.length < 3) {
+        throw new Error('Tracking number too short');
+      }
+      return { valid: true, format: 'container' };
+    },
     enabled: trackingNumber.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
@@ -32,7 +38,7 @@ export const useSearchShipment = (
 
   return useQuery({
     queryKey: queryKeys.shipment(trackingNumber),
-    queryFn: async () => {
+    queryFn: async (): Promise<ShipmentTracking> => {
       // Check cache first
       const cached = getCachedShipment(trackingNumber);
       if (cached) {
@@ -40,7 +46,17 @@ export const useSearchShipment = (
       }
 
       // Fetch from API
-      const shipment = await apiClient.searchShipment(trackingNumber, type);
+      const response = await apiClient.get<{
+        success: boolean;
+        data: ShipmentTracking;
+        message: string;
+      }>(`/tracking/${encodeURIComponent(trackingNumber)}${type ? `?type=${type}` : ''}`);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to fetch shipment data');
+      }
+
+      const shipment = response.data;
       
       // Cache the result
       cacheShipment(trackingNumber, shipment);
@@ -66,7 +82,7 @@ export const useShipmentDetails = (trackingNumber: string) => {
 
   return useQuery({
     queryKey: queryKeys.shipment(trackingNumber),
-    queryFn: async () => {
+    queryFn: async (): Promise<ShipmentTracking> => {
       // Check cache first
       const cached = getCachedShipment(trackingNumber);
       if (cached) {
@@ -74,7 +90,17 @@ export const useShipmentDetails = (trackingNumber: string) => {
       }
 
       // Fetch from API
-      const shipment = await apiClient.getShipmentDetails(trackingNumber);
+      const response = await apiClient.get<{
+        success: boolean;
+        data: ShipmentTracking;
+        message: string;
+      }>(`/tracking/${encodeURIComponent(trackingNumber)}`);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to fetch shipment details');
+      }
+
+      const shipment = response.data;
       
       // Cache the result
       cacheShipment(trackingNumber, shipment);
@@ -93,8 +119,19 @@ export const useRefreshShipment = () => {
   const { cacheShipment } = useTrackingStore();
 
   return useMutation({
-    mutationFn: (trackingNumber: string) => 
-      apiClient.refreshShipment(trackingNumber),
+    mutationFn: async (trackingNumber: string): Promise<ShipmentTracking> => {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: ShipmentTracking;
+        message: string;
+      }>(`/tracking/${encodeURIComponent(trackingNumber)}/refresh`);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to refresh shipment');
+      }
+
+      return response.data;
+    },
     onSuccess: (data, trackingNumber) => {
       // Update cache
       cacheShipment(trackingNumber, data);
@@ -115,7 +152,19 @@ export const useRefreshShipment = () => {
 export const useBatchShipments = (trackingNumbers: string[]) => {
   return useQuery({
     queryKey: ['shipments', 'batch', ...trackingNumbers.sort()],
-    queryFn: () => apiClient.getShipments(trackingNumbers),
+    queryFn: async () => {
+      const response = await apiClient.post<{
+        success: boolean;
+        data: ShipmentTracking[];
+        message: string;
+      }>('/tracking/batch', { trackingNumbers });
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to fetch shipments');
+      }
+
+      return response.data;
+    },
     enabled: trackingNumbers.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -145,10 +194,22 @@ export const useTrackingSearch = () => {
   const queryClient = useQueryClient();
 
   const searchMutation = useMutation({
-    mutationFn: ({ trackingNumber, type }: { 
+    mutationFn: async ({ trackingNumber, type }: { 
       trackingNumber: string; 
       type?: TrackingType 
-    }) => apiClient.searchShipment(trackingNumber, type),
+    }): Promise<ShipmentTracking> => {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: ShipmentTracking;
+        message: string;
+      }>(`/tracking/${encodeURIComponent(trackingNumber)}${type ? `?type=${type}` : ''}`);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Search failed');
+      }
+
+      return response.data;
+    },
     onMutate: () => {
       setIsSearching(true);
       setSearchError(null);

@@ -9,7 +9,7 @@ import {
   validateTrackingNumber
 } from '../../utils';
 import { FORMAT_EXAMPLES } from '../../types/constants';
-import { LoadingSpinner, ProgressIndicator } from '../LoadingStates';
+import { LoadingStateManager } from '../LoadingStates/LoadingStateManager';
 import { useIsMobile, useIsTouchDevice, useScreenReader, useDebounce, useComponentPerformance } from '../../hooks';
 
 const SearchComponent: React.FC<SearchComponentProps> = ({
@@ -343,31 +343,34 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
         )}
       </form>
 
-      {/* Loading Progress Indicator */}
-      {isLoading && (
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="flex items-center space-x-3 mb-3">
-            <LoadingSpinner size="sm" color="text-blue-600" />
-            <span className="text-blue-800 font-medium">
-              {loadingMessage}
-            </span>
-          </div>
-          
-          {showProgress && (
-            <ProgressIndicator
-              steps={[
-                'Validating',
-                'Searching APIs',
-                'Processing Data',
-                'Complete'
-              ]}
-              currentStep={1}
-              showLabels={false}
-              className="mt-3"
-            />
-          )}
-        </div>
-      )}
+      {/* Enhanced Loading State Manager */}
+      <LoadingStateManager
+        isLoading={isLoading}
+        trackingNumber={state.query}
+        loadingType="search-results"
+        className="mt-6"
+        variant="auto"
+        showProviderDetails={true}
+        showTimeoutHandler={true}
+        timeoutMs={30000}
+        onCancel={() => {
+          // Handle cancel - could emit an event or call a prop function
+          console.log('Search cancelled by user');
+        }}
+        onRetry={() => {
+          // Handle retry - restart the search
+          if (state.query.trim()) {
+            const validation = validateTrackingNumber(state.query);
+            if (validation.isValid) {
+              onSearch(state.query.trim(), validation.detectedType!);
+            }
+          }
+        }}
+        onSwitchToDemo={() => {
+          // Handle demo mode switch
+          console.log('Switching to demo mode');
+        }}
+      />
     </div>
   );
 };

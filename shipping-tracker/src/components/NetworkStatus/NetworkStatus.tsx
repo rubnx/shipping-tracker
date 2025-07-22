@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { apiClient } from '../../services/ApiClient';
 
 interface NetworkStatusProps {
   className?: string;
@@ -12,6 +13,7 @@ const NetworkStatus: React.FC<NetworkStatusProps> = ({
 }) => {
   const { isOnline, isOffline, wasOffline } = useNetworkStatus();
   const [showReconnected, setShowReconnected] = useState(false);
+  const [apiStatus, setApiStatus] = useState(apiClient.getConnectionStatus());
 
   useEffect(() => {
     if (isOnline && wasOffline) {
@@ -22,6 +24,15 @@ const NetworkStatus: React.FC<NetworkStatusProps> = ({
       return () => clearTimeout(timer);
     }
   }, [isOnline, wasOffline]);
+
+  useEffect(() => {
+    // Update API status periodically
+    const interval = setInterval(() => {
+      setApiStatus(apiClient.getConnectionStatus());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   if (isOnline && !showReconnected && !showWhenOnline) {
     return null;
@@ -39,6 +50,15 @@ const NetworkStatus: React.FC<NetworkStatusProps> = ({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 109.75 9.75A9.75 9.75 0 0012 2.25z" />
           </svg>
           <span className="text-sm font-medium">You're offline</span>
+        </div>
+      )}
+
+      {isOnline && !apiStatus.apiReachable && (
+        <div className="bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <span className="text-sm font-medium">API unavailable</span>
         </div>
       )}
       

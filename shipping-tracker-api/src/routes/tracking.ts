@@ -2,9 +2,81 @@ import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import { ApiResponse, TrackingRequest, TrackingResponse, TrackingType } from '../types';
 import { TrackingService } from '../services/TrackingService';
+import { MockDataService } from '../services/MockDataService';
+import { isDemoMode } from '../config/environment';
 
 const router = Router();
 const trackingService = new TrackingService();
+
+// GET /api/tracking/demo/info
+// Get demo mode information and available demo tracking numbers
+router.get('/demo/info', asyncHandler(async (req: Request, res: Response) => {
+  const demoInfo = MockDataService.getDemoModeInfo();
+  
+  res.json({
+    success: true,
+    data: {
+      ...demoInfo,
+      currentlyEnabled: isDemoMode(),
+    },
+    message: 'Demo mode information retrieved successfully',
+    timestamp: new Date().toISOString()
+  } as ApiResponse);
+}));
+
+// GET /api/tracking/demo/numbers
+// Get list of available demo tracking numbers
+router.get('/demo/numbers', asyncHandler(async (req: Request, res: Response) => {
+  const demoNumbers = MockDataService.getDemoTrackingNumbers();
+  
+  res.json({
+    success: true,
+    data: {
+      trackingNumbers: demoNumbers,
+      count: demoNumbers.length,
+      categories: {
+        containers: demoNumbers.filter(num => num.includes('CONTAINER') || num.includes('CNTR')),
+        bookings: demoNumbers.filter(num => num.includes('BOOKING') || num.includes('BKG')),
+        billsOfLading: demoNumbers.filter(num => num.includes('BOL') || num.includes('BILL')),
+        carriers: demoNumbers.filter(num => 
+          ['MAERSK', 'MSC', 'CMACGM', 'COSCO', 'HAPAG', 'EVERGREEN', 'ONE', 'YANGMING', 'ZIM'].some(carrier => 
+            num.includes(carrier)
+          )
+        ),
+        errorTesting: demoNumbers.filter(num => 
+          ['ERROR', 'TIMEOUT', 'NOTFOUND', 'RATELIMIT'].some(error => 
+            num.includes(error)
+          )
+        ),
+      }
+    },
+    message: 'Demo tracking numbers retrieved successfully',
+    timestamp: new Date().toISOString()
+  } as ApiResponse);
+}));
+
+// GET /api/tracking/demo/status
+// Get demo mode status and mock API health
+router.get('/demo/status', asyncHandler(async (req: Request, res: Response) => {
+  const mockStatus = MockDataService.getMockAPIStatus();
+  
+  res.json({
+    success: true,
+    data: {
+      demoMode: isDemoMode(),
+      mockAPIs: mockStatus,
+      features: [
+        'Realistic shipment data generation',
+        'Multiple carrier simulation',
+        'Error scenario testing',
+        'Consistent data based on tracking number',
+        'Simulated API response delays',
+      ]
+    },
+    message: 'Demo mode status retrieved successfully',
+    timestamp: new Date().toISOString()
+  } as ApiResponse);
+}));
 
 // GET /api/tracking/suggestions
 // Get search suggestions based on partial input

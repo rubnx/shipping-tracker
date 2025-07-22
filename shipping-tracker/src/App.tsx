@@ -1,33 +1,46 @@
 import { useState } from 'react';
 import './App.css';
 import SearchComponent from './components/SearchComponent';
+import { MobileSearchComponent } from './components/SearchComponent/MobileSearchComponent';
 import TimelineComponent from './components/TimelineComponent';
+import { SwipeableTimeline } from './components/TimelineComponent/SwipeableTimeline';
 import { MapComponent } from './components/MapComponent';
 import ShipmentDetailsComponent from './components/ShipmentDetailsComponent';
+import { MobileShipmentDetails } from './components/ShipmentDetails/MobileShipmentDetails';
 import { NetworkStatus } from './components/NetworkStatus';
+import { LoadingStateManager } from './components/LoadingStates/LoadingStateManager';
+import { MobileResponsiveLayout } from './components/Layout/MobileResponsiveLayout';
+import { useMobileOptimization } from './hooks/useMobileOptimization';
 import { useTrackingSearch } from './api/queries';
 import { useSearchHistory } from './hooks/useSearchHistory';
 import type { TrackingType, Port, ShipmentTracking } from './types';
 
 function App() {
   const [currentShipment, setCurrentShipment] = useState<ShipmentTracking | null>(null);
+  const [showLoadingManager, setShowLoadingManager] = useState(false);
+  const [currentTrackingNumber, setCurrentTrackingNumber] = useState<string>('');
   const { history } = useSearchHistory();
   const { search, isSearching, error, data, reset } = useTrackingSearch();
+  const mobile = useMobileOptimization();
 
   // Handle search submission
   const handleSearch = async (query: string, type: TrackingType) => {
     try {
       reset();
+      setCurrentTrackingNumber(query);
+      setShowLoadingManager(true);
       search(query, type);
       // The data will be available in the `data` property from useTrackingSearch
     } catch (error) {
       console.error('Search failed:', error);
+      setShowLoadingManager(false);
     }
   };
 
   // Update current shipment when data changes
   if (data && data !== currentShipment) {
     setCurrentShipment(data);
+    setShowLoadingManager(false);
   }
 
   // Handle map marker clicks
@@ -36,10 +49,138 @@ function App() {
   };
 
   // Handle refresh
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     if (currentShipment?.trackingNumber) {
       handleSearch(currentShipment.trackingNumber, currentShipment.trackingType);
     }
+  };
+
+  // Handle share
+  const handleShare = async () => {
+    if (!currentShipment) return;
+    
+    const shareData = {
+      title: `Shipment Tracking - ${currentShipment.trackingNumber}`,
+      text: `Track shipment ${currentShipment.trackingNumber} - Status: ${currentShipment.status}`,
+      url: window.location.href,
+    };
+    
+    try {
+      await mobile.shareContent(shareData);
+    } catch (error) {
+      console.log('Share failed, copying to clipboard instead');
+      await mobile.copyToClipboard(window.location.href);
+    }
+  };
+
+  // Handle save
+  const handleSave = () => {
+    if (!currentShipment) return;
+    
+    // Add to local storage or favorites
+    const savedShipments = JSON.parse(localStorage.getItem('savedShipments') || '[]');
+    const newSavedShipment = {
+      trackingNumber: currentShipment.trackingNumber,
+      carrier: currentShipment.carrier,
+      status: currentShipment.status,
+      savedAt: new Date().toISOString(),
+    };
+    
+    savedShipments.push(newSavedShipment);
+    localStorage.setItem('savedShipments', JSON.stringify(savedShipments));
+    
+    // Show feedback
+    mobile.vibrate(50);
+  };
+
+  // Handle loading state manager events
+  const handleLoadingSuccess = (data: any) => {
+    setCurrentShipment(data);
+    setShowLoadingManager(false);
+  };
+
+  const handleLoadingError = (error: string) => {
+    console.error('Loading error:', error);
+    setShowLoadingManager(false);
+  };
+
+  const handleLoadingCancel = () => {
+    setShowLoadingManager(false);
+    reset();
+  };
+
+  const handleSwitchToDemo = () => {
+    // Create demo data
+    const demoShipment: ShipmentTracking = {
+      trackingNumber: 'DEMO123456789',
+      trackingType: 'container',
+      carrier: 'Demo Carrier',
+      status: 'In Transit',
+      estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      timeline: [
+        {
+          status: 'Booked',
+          timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          location: 'Shanghai, China',
+          description: 'Shipment booked and confirmed',
+          isCompleted: true,
+        },
+        {
+          status: 'Departed',
+          timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+          location: 'Shanghai Port, China',
+          description: 'Container departed from origin port',
+          isCompleted: true,
+        },
+        {
+          status: 'In Transit',
+          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+          location: 'Pacific Ocean',
+          description: 'Vessel en route to destination',
+          isCompleted: true,
+        },
+        {
+          status: 'Arriving',
+          timestamp: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+          location: 'Los Angeles, CA',
+          description: 'Expected arrival at destination port',
+          isCompleted: false,
+        },
+      ],
+      route: {
+        origin: {
+          name: 'Shanghai Port',
+          code: 'CNSHA',
+          country: 'China',
+          coordinates: { lat: 31.2304, lng: 121.4737 },
+        },
+        destination: {
+          name: 'Los Angeles Port',
+          code: 'USLAX',
+          country: 'United States',
+          coordinates: { lat: 33.7361, lng: -118.2922 },
+        },
+        intermediateStops: [],
+        distance: 11500,
+        estimatedTransitTime: 14,
+      },
+      container: {
+        number: 'DEMO123456789',
+        size: '40HC',
+        type: 'High Cube',
+        sealNumber: 'SEAL123456',
+      },
+      vessel: {
+        name: 'Demo Vessel',
+        imo: 'IMO1234567',
+        flag: 'Panama',
+        currentPosition: { lat: 35.0, lng: -140.0 },
+        eta: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      },
+    };
+    
+    setCurrentShipment(demoShipment);
+    setShowLoadingManager(false);
   };
 
   // Calculate completion percentage for timeline
@@ -49,7 +190,22 @@ function App() {
     return Math.round((completedEvents / shipment.timeline.length) * 100);
   };
 
-  return (
+  // Mobile layout wrapper
+  const MobileLayout = ({ children }: { children: React.ReactNode }) => (
+    <MobileResponsiveLayout
+      title="Shipping Tracker"
+      enablePullToRefresh={true}
+      onRefresh={handleRefresh}
+      stickyHeader={true}
+      fullHeight={true}
+      className="min-h-screen bg-gray-50"
+    >
+      {children}
+    </MobileResponsiveLayout>
+  );
+
+  // Desktop layout wrapper
+  const DesktopLayout = ({ children }: { children: React.ReactNode }) => (
     <div className="min-h-screen bg-gray-50">
       {/* Network Status */}
       <NetworkStatus />
@@ -70,6 +226,28 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {children}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="text-center text-sm text-gray-500">
+            <p>&copy; 2024 Shipping Tracker. Built with modern web technologies.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+
+  const Layout = mobile.isMobile ? MobileLayout : DesktopLayout;
+
+  return (
+    <Layout>
+      {/* Network Status for mobile */}
+      {mobile.isMobile && <NetworkStatus />}
+      
+      <div className="space-y-6">
         {/* Search Section */}
         <div className="mb-8">
           <SearchComponent
@@ -82,6 +260,55 @@ function App() {
             loadingMessage="Searching for tracking information..."
           />
         </div>
+
+        {/* Enhanced Loading State Manager */}
+        {(isSearching || showLoadingManager) && (
+          <div className="mb-8">
+            <LoadingStateManager
+              isLoading={isSearching}
+              trackingNumber={currentTrackingNumber}
+              onCancel={handleLoadingCancel}
+              onRetry={() => {
+                if (currentTrackingNumber) {
+                  handleSearch(currentTrackingNumber, 'container');
+                }
+              }}
+              onSwitchToDemo={handleSwitchToDemo}
+              onTryDifferentNumber={() => setShowLoadingManager(false)}
+              onReportIssue={() => {
+                console.log('Issue reported for tracking number:', currentTrackingNumber);
+                // Here you could integrate with an error reporting service
+              }}
+              loadingType="shipment-details"
+              timeoutMs={30000}
+              showProviderDetails={true}
+              variant={mobile.isMobile ? 'mobile' : 'desktop'}
+              providers={[
+                {
+                  name: 'Track-Trace',
+                  tier: 'free',
+                  status: 'pending',
+                  description: 'Free tier tracking service',
+                  estimatedTime: 3000,
+                },
+                {
+                  name: 'ShipsGo',
+                  tier: 'freemium',
+                  status: 'pending',
+                  description: 'Enhanced vessel tracking',
+                  estimatedTime: 5000,
+                },
+                {
+                  name: 'SeaRates',
+                  tier: 'freemium',
+                  status: 'pending',
+                  description: 'Shipping rates and tracking',
+                  estimatedTime: 4000,
+                },
+              ]}
+            />
+          </div>
+        )}
 
         {/* Error Display */}
         {error && (
