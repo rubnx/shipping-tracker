@@ -95,7 +95,7 @@ export function MobileOptimizedLoader({
 
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">
-                                {error ? 'Error occurred' : loadingMessages[currentMessageIndex]}
+                                {error ? 'Error occurred' : (currentStep || loadingMessages[currentMessageIndex])}
                             </p>
                             {trackingNumber && (
                                 <p className="text-xs text-gray-500 truncate">
@@ -219,7 +219,7 @@ export function MobileOptimizedLoader({
                 {isLoading && (
                     <div className="text-center">
                         <p className="text-base text-gray-700 mb-2">
-                            {loadingMessages[currentMessageIndex]}
+                            {currentStep || loadingMessages[currentMessageIndex]}
                         </p>
 
                         {getActiveProvider() && (
@@ -310,8 +310,8 @@ export function MobileOptimizedLoader({
                                             {provider.name}
                                         </span>
                                         <span className={`ml-2 px-1.5 py-0.5 text-xs rounded-full ${provider.tier === 'premium' ? 'bg-purple-100 text-purple-800' :
-                                                provider.tier === 'freemium' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-green-100 text-green-800'
+                                            provider.tier === 'freemium' ? 'bg-blue-100 text-blue-800' :
+                                                'bg-green-100 text-green-800'
                                             }`}>
                                             {provider.tier}
                                         </span>

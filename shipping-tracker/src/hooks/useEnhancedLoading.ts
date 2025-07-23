@@ -22,6 +22,7 @@ export interface LoadingState {
   canRetry: boolean;
   canCancel: boolean;
   showFallbackOptions: boolean;
+  trackingNumber?: string;
 }
 
 export interface UseEnhancedLoadingOptions {
@@ -65,6 +66,7 @@ export function useEnhancedLoading(options: UseEnhancedLoadingOptions = {}) {
     canRetry: true,
     canCancel: true,
     showFallbackOptions: false,
+    trackingNumber,
   });
 
   const startTimeRef = useRef<number | null>(null);
@@ -234,8 +236,9 @@ export function useEnhancedLoading(options: UseEnhancedLoadingOptions = {}) {
       canRetry: true,
       canCancel: true,
       showFallbackOptions: false,
+      trackingNumber,
     });
-  }, [stopLoading, initialProviders]);
+  }, [stopLoading, initialProviders, trackingNumber]);
 
   /**
    * Retry the loading process
