@@ -1,0 +1,416 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  # Quality Gates and Security Scanning
+  quality-gates:
+    name: Quality Gates & Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install frontend dependencies
+        working-directory: ./shipping-tracker
+        run: pnpm install --frozen-lockfile
+
+      - name: Install backend dependencies
+        working-directory: ./shipping-tracker-api
+        run: npm ci
+
+      - name: Lint frontend code
+        working-directory: ./shipping-tracker
+        run: pnpm lint
+
+      - name: Type check frontend
+        working-directory: ./shipping-tracker
+        run: pnpm type-check
+
+      - name: Format check frontend
+        working-directory: ./shipping-tracker
+        run: pnpm format:check
+
+      - name: Security audit frontend
+        working-directory: ./shipping-tracker
+        run: pnpm audit --audit-level moderate
+        continue-on-error: true
+
+      - name: Security audit backend
+        working-directory: ./shipping-tracker-api
+        run: npm audit --audit-level moderate
+        continue-on-error: true
+
+      - name: Dependency vulnerability check
+        uses: actions/dependency-review-action@v3
+        if: github.event_name == 'pull_request'
+
+  # Unit and Integration Tests
+  test-unit-integration:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    strategy:
+      matrix:
+        node-version: [18, 20]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install frontend dependencies
+        working-directory: ./shipping-tracker
+        run: pnpm install --frozen-lockfile
+
+      - name: Install backend dependencies
+        working-directory: ./shipping-tracker-api
+        run: npm ci
+
+      - name: Run frontend unit tests
+        working-directory: ./shipping-tracker
+        run: pnpm test:run
+
+      - name: Run frontend integration tests
+        working-directory: ./shipping-tracker
+        run: pnpm test:run src/test/integration/
+
+      - name: Run backend tests
+        working-directory: ./shipping-tracker-api
+        run: npm test
+
+      - name: Generate test coverage
+        working-directory: ./shipping-tracker
+        run: pnpm test:coverage
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./shipping-tracker/coverage
+          flags: frontend
+          name: frontend-coverage
+
+      - name: Coverage quality gate
+        working-directory: ./shipping-tracker
+        run: |
+          COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+          echo "Coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "Coverage is below 80% threshold"
+            exit 1
+          fi
+
+  # End-to-End Tests
+  test-e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install frontend dependencies
+        working-directory: ./shipping-tracker
+        run: pnpm install --frozen-lockfile
+
+      - name: Install backend dependencies
+        working-directory: ./shipping-tracker-api
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: ./shipping-tracker
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Build frontend
+        working-directory: ./shipping-tracker
+        run: pnpm build
+
+      - name: Start backend server
+        working-directory: ./shipping-tracker-api
+        run: |
+          npm run build
+          npm start &
+          echo $! > backend.pid
+        env:
+          NODE_ENV: test
+          PORT: 3001
+
+      - name: Start frontend server
+        working-directory: ./shipping-tracker
+        run: |
+          pnpm preview --port 5173 &
+          echo $! > frontend.pid
+
+      - name: Wait for servers
+        run: |
+          npx wait-on http://localhost:3001/health http://localhost:5173 --timeout 60000
+
+      - name: Run E2E tests
+        working-directory: ./shipping-tracker
+        run: pnpm test:e2e --project=${{ matrix.browser }}
+        env:
+          CI: true
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-results-${{ matrix.browser }}
+          path: |
+            shipping-tracker/test-results/
+            shipping-tracker/playwright-report/
+          retention-days: 7
+
+      - name: Stop servers
+        if: always()
+        run: |
+          if [ -f shipping-tracker-api/backend.pid ]; then
+            kill $(cat shipping-tracker-api/backend.pid) || true
+          fi
+          if [ -f shipping-tracker/frontend.pid ]; then
+            kill $(cat shipping-tracker/frontend.pid) || true
+          fi
+
+  # Accessibility Tests
+  test-accessibility:
+    name: Accessibility Tests
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        working-directory: ./shipping-tracker
+        run: pnpm install --frozen-lockfile
+
+      - name: Install backend dependencies
+        working-directory: ./shipping-tracker-api
+        run: npm ci
+
+      - name: Install Playwright
+        working-directory: ./shipping-tracker
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build and start services
+        run: |
+          cd shipping-tracker && pnpm build &
+          cd shipping-tracker-api && npm run build && npm start &
+          cd shipping-tracker && pnpm preview --port 5173 &
+          npx wait-on http://localhost:3001/health http://localhost:5173 --timeout 60000
+
+      - name: Run accessibility tests
+        working-directory: ./shipping-tracker
+        run: pnpm test:e2e e2e/accessibility-automation.spec.ts
+
+      - name: Upload accessibility report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: accessibility-report
+          path: shipping-tracker/test-results/accessibility-report.json
+          retention-days: 30
+
+  # Performance Tests
+  test-performance:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        working-directory: ./shipping-tracker
+        run: pnpm install --frozen-lockfile
+
+      - name: Install backend dependencies
+        working-directory: ./shipping-tracker-api
+        run: npm ci
+
+      - name: Build applications
+        run: |
+          cd shipping-tracker && pnpm build
+          cd shipping-tracker-api && npm run build
+
+      - name: Run performance tests
+        working-directory: ./shipping-tracker
+        run: pnpm test:run src/test/integration/performance.test.ts
+
+      - name: Bundle size analysis
+        working-directory: ./shipping-tracker
+        run: |
+          pnpm build:analyze
+          BUNDLE_SIZE=$(du -sh dist/ | cut -f1)
+          echo "Bundle size: $BUNDLE_SIZE"
+          # Add bundle size check logic here
+
+  # Security Scanning
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          languages: javascript,typescript
+
+  # Build and Deploy (only on main branch)
+  build-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    needs: [test-unit-integration, test-e2e, test-accessibility, test-performance]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install and build frontend
+        working-directory: ./shipping-tracker
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.PRODUCTION_API_URL }}
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN_FRONTEND }}
+
+      - name: Install and build backend
+        working-directory: ./shipping-tracker-api
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to staging
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          echo "Deploying to staging environment"
+          # Add staging deployment logic
+
+      - name: Deploy to production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Deploying to production environment"
+          # Add production deployment logic
+
+      - name: Notify deployment
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # Cleanup
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [build-deploy]
+    if: always()
+    steps:
+      - name: Clean up artifacts
+        run: |
+          echo "Cleaning up temporary artifacts"
+          # Add cleanup logic if needed

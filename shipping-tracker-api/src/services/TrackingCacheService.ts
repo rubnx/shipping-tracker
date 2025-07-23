@@ -1,5 +1,5 @@
 import { CacheService } from './CacheService';
-import type { ShipmentTracking } from '../types';
+import type { ShipmentData } from '../types';
 
 /**
  * Tracking-specific cache service
@@ -50,7 +50,7 @@ export class TrackingCacheService {
    */
   public async cacheTrackingData(
     trackingNumber: string,
-    data: ShipmentTracking,
+    data: ShipmentData,
     customTTL?: number
   ): Promise<boolean> {
     const key = this.generateTrackingKey(trackingNumber);
@@ -72,9 +72,9 @@ export class TrackingCacheService {
   /**
    * Get cached tracking data
    */
-  public async getCachedTrackingData(trackingNumber: string): Promise<ShipmentTracking | null> {
+  public async getCachedTrackingData(trackingNumber: string): Promise<ShipmentData | null> {
     const key = this.generateTrackingKey(trackingNumber);
-    const data = await this.cache.get<ShipmentTracking>(this.NAMESPACES.TRACKING, key);
+    const data = await this.cache.get<ShipmentData>(this.NAMESPACES.TRACKING, key);
     
     if (data) {
       // Remove cache metadata before returning
@@ -290,7 +290,7 @@ export class TrackingCacheService {
    * Batch cache multiple tracking data
    */
   public async batchCacheTrackingData(
-    trackingDataMap: Record<string, ShipmentTracking>,
+    trackingDataMap: Record<string, ShipmentData>,
     customTTL?: number
   ): Promise<boolean> {
     const ttl = customTTL || this.TTL.TRACKING_DATA;
@@ -316,14 +316,14 @@ export class TrackingCacheService {
    */
   public async batchGetTrackingData(
     trackingNumbers: string[]
-  ): Promise<Record<string, ShipmentTracking | null>> {
+  ): Promise<Record<string, ShipmentData | null>> {
     const keys = trackingNumbers.map(num => this.generateTrackingKey(num));
-    const cachedData = await this.cache.getMultiple<ShipmentTracking>(
+    const cachedData = await this.cache.getMultiple<ShipmentData>(
       this.NAMESPACES.TRACKING,
       keys
     );
 
-    const result: Record<string, ShipmentTracking | null> = {};
+    const result: Record<string, ShipmentData | null> = {};
     
     trackingNumbers.forEach((trackingNumber, index) => {
       const key = keys[index];
@@ -353,9 +353,10 @@ export class TrackingCacheService {
    * Invalidate all API responses for a tracking number
    */
   public async invalidateAPIResponses(trackingNumber: string): Promise<number> {
-    const pattern = `*:${this.generateTrackingKey(trackingNumber)}`;
     // Note: This is a simplified approach. In production, you might want to maintain
     // a separate index of keys for more efficient pattern-based deletion
+    // Pattern would be: `*:${this.generateTrackingKey(trackingNumber)}`
+    console.log(`Would invalidate API responses for tracking number: ${trackingNumber}`);
     return 0; // Placeholder - implement pattern-based deletion if needed
   }
 
@@ -371,7 +372,7 @@ export class TrackingCacheService {
     // Count keys in each namespace (simplified approach)
     const namespaceStats: Record<string, number> = {};
     
-    for (const [name, namespace] of Object.entries(this.NAMESPACES)) {
+    for (const [name] of Object.entries(this.NAMESPACES)) {
       // This is a placeholder - implement actual key counting if needed
       namespaceStats[name] = 0;
     }

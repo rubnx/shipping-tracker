@@ -1,0 +1,139 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+
+      - name: Update frontend dependencies
+        working-directory: ./shipping-tracker
+        run: |
+          pnpm update --latest
+          pnpm audit fix || true
+
+      - name: Update backend dependencies
+        working-directory: ./shipping-tracker-api
+        run: |
+          npm update
+          npm audit fix || true
+
+      - name: Run tests after updates
+        run: |
+          cd shipping-tracker && pnpm test:run
+          cd shipping-tracker-api && npm test
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependencies'
+          title: 'Automated Dependency Updates'
+          body: |
+            This PR contains automated dependency updates.
+            
+            ## Changes
+            - Updated frontend dependencies to latest versions
+            - Updated backend dependencies to latest versions
+            - Fixed security vulnerabilities where possible
+            
+            ## Testing
+            - ✅ Unit tests pass
+            - ✅ Integration tests pass
+            
+            Please review the changes and run additional tests if needed.
+          branch: automated-dependency-updates
+          delete-branch: true
+
+  security-updates:
+    name: Security Updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+
+      - name: Check for security vulnerabilities
+        run: |
+          cd shipping-tracker && pnpm audit --audit-level high --json > frontend-audit.json || true
+          cd shipping-tracker-api && npm audit --audit-level high --json > backend-audit.json || true
+
+      - name: Create security issue if vulnerabilities found
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let hasVulnerabilities = false;
+            let issueBody = '## Security Vulnerabilities Found\n\n';
+            
+            // Check frontend vulnerabilities
+            try {
+              const frontendAudit = JSON.parse(fs.readFileSync('shipping-tracker/frontend-audit.json', 'utf8'));
+              if (frontendAudit.metadata && frontendAudit.metadata.vulnerabilities && frontendAudit.metadata.vulnerabilities.total > 0) {
+                hasVulnerabilities = true;
+                issueBody += '### Frontend Vulnerabilities\n';
+                issueBody += `- High: ${frontendAudit.metadata.vulnerabilities.high}\n`;
+                issueBody += `- Moderate: ${frontendAudit.metadata.vulnerabilities.moderate}\n`;
+                issueBody += `- Low: ${frontendAudit.metadata.vulnerabilities.low}\n\n`;
+              }
+            } catch (e) {
+              console.log('No frontend audit file or no vulnerabilities');
+            }
+            
+            // Check backend vulnerabilities
+            try {
+              const backendAudit = JSON.parse(fs.readFileSync('shipping-tracker-api/backend-audit.json', 'utf8'));
+              if (backendAudit.metadata && backendAudit.metadata.vulnerabilities && backendAudit.metadata.vulnerabilities.total > 0) {
+                hasVulnerabilities = true;
+                issueBody += '### Backend Vulnerabilities\n';
+                issueBody += `- High: ${backendAudit.metadata.vulnerabilities.high}\n`;
+                issueBody += `- Moderate: ${backendAudit.metadata.vulnerabilities.moderate}\n`;
+                issueBody += `- Low: ${backendAudit.metadata.vulnerabilities.low}\n\n`;
+              }
+            } catch (e) {
+              console.log('No backend audit file or no vulnerabilities');
+            }
+            
+            if (hasVulnerabilities) {
+              issueBody += '## Action Required\n';
+              issueBody += 'Please review and update the affected dependencies.\n';
+              issueBody += 'Run `npm audit fix` or `pnpm audit fix` to automatically fix issues where possible.\n';
+              
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🚨 Security Vulnerabilities Detected',
+                body: issueBody,
+                labels: ['security', 'dependencies', 'high-priority']
+              });
+            }

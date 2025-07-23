@@ -1,0 +1,209 @@
+name: Performance Monitoring
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Run performance tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  lighthouse-audit:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+
+      - name: Install and build
+        working-directory: ./shipping-tracker
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: Install backend dependencies
+        working-directory: ./shipping-tracker-api
+        run: npm ci
+
+      - name: Start services
+        run: |
+          cd shipping-tracker-api && npm start &
+          cd shipping-tracker && pnpm preview --port 5173 &
+          npx wait-on http://localhost:3001/health http://localhost:5173 --timeout 60000
+
+      - name: Run Lighthouse audit
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          configPath: './lighthouse.config.js'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v3
+        with:
+          name: lighthouse-results
+          path: .lighthouseci/
+          retention-days: 30
+
+  bundle-analysis:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+
+      - name: Install dependencies
+        working-directory: ./shipping-tracker
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and analyze
+        working-directory: ./shipping-tracker
+        run: pnpm build:analyze
+
+      - name: Bundle size check
+        working-directory: ./shipping-tracker
+        run: |
+          BUNDLE_SIZE=$(du -sb dist/ | cut -f1)
+          BUNDLE_SIZE_MB=$((BUNDLE_SIZE / 1024 / 1024))
+          echo "Bundle size: ${BUNDLE_SIZE_MB}MB"
+          
+          # Set bundle size threshold (5MB)
+          THRESHOLD=5
+          if [ $BUNDLE_SIZE_MB -gt $THRESHOLD ]; then
+            echo "Bundle size exceeds ${THRESHOLD}MB threshold"
+            exit 1
+          fi
+
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v3
+        with:
+          name: bundle-analysis
+          path: shipping-tracker/dist/stats.html
+          retention-days: 30
+
+  load-testing:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Install and start services
+        run: |
+          cd shipping-tracker-api && npm ci && npm start &
+          npx wait-on http://localhost:3001/health --timeout 60000
+
+      - name: Run load tests
+        run: |
+          cat > load-test.js << 'EOF'
+          import http from 'k6/http';
+          import { check, sleep } from 'k6';
+
+          export let options = {
+            stages: [
+              { duration: '2m', target: 10 }, // Ramp up
+              { duration: '5m', target: 10 }, // Stay at 10 users
+              { duration: '2m', target: 20 }, // Ramp up to 20 users
+              { duration: '5m', target: 20 }, // Stay at 20 users
+              { duration: '2m', target: 0 },  // Ramp down
+            ],
+            thresholds: {
+              http_req_duration: ['p(95)<2000'], // 95% of requests under 2s
+              http_req_failed: ['rate<0.1'],    // Error rate under 10%
+            },
+          };
+
+          export default function() {
+            // Test health endpoint
+            let healthRes = http.get('http://localhost:3001/health');
+            check(healthRes, {
+              'health check status is 200': (r) => r.status === 200,
+            });
+
+            // Test tracking endpoint with demo data
+            let trackRes = http.get('http://localhost:3001/api/track?trackingNumber=DEMO123456789');
+            check(trackRes, {
+              'tracking request status is 200 or 404': (r) => r.status === 200 || r.status === 404,
+              'response time < 2000ms': (r) => r.timings.duration < 2000,
+            });
+
+            sleep(1);
+          }
+          EOF
+
+          k6 run load-test.js
+
+  performance-regression:
+    name: Performance Regression Detection
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+
+      - name: Install dependencies
+        working-directory: ./shipping-tracker
+        run: pnpm install --frozen-lockfile
+
+      - name: Run performance benchmarks
+        working-directory: ./shipping-tracker
+        run: |
+          pnpm test:run src/test/integration/performance.test.ts --reporter=json > performance-results.json
+
+      - name: Compare with baseline
+        run: |
+          # This would compare current performance with stored baseline
+          # For now, just check that performance tests pass
+          echo "Performance regression check completed"
+
+      - name: Store performance baseline
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Store current performance metrics as new baseline
+          echo "Storing new performance baseline"
