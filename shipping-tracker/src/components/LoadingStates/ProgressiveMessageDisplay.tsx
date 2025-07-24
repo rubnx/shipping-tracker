@@ -1,2 +1,323 @@
-import React, { useState, useEffect } from 'react';\n\ninterface ProgressiveMessageDisplayProps {\n  isLoading: boolean;\n  elapsedTime: number;\n  currentProvider?: string;\n  providerTier?: 'free' | 'freemium' | 'premium';\n  variant?: 'compact' | 'detailed';\n  className?: string;\n}\n\ninterface ProgressiveMessage {\n  id: string;\n  message: string;\n  timestamp: number;\n  type: 'info' | 'warning' | 'tip' | 'status';\n  icon?: string;\n  priority: number;\n}\n\n/**\n * Progressive message display that shows contextual messages based on loading progress\n * Implements Requirements 5.1, 5.2 for progressive loading messages\n */\nexport function ProgressiveMessageDisplay({\n  isLoading,\n  elapsedTime,\n  currentProvider,\n  providerTier,\n  variant = 'detailed',\n  className = '',\n}: ProgressiveMessageDisplayProps) {\n  const [messages, setMessages] = useState<ProgressiveMessage[]>([]);\n  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);\n\n  // Generate progressive messages based on elapsed time and context\n  useEffect(() => {\n    if (!isLoading) {\n      setMessages([]);\n      setCurrentMessageIndex(0);\n      return;\n    }\n\n    const newMessages: ProgressiveMessage[] = [];\n    const now = Date.now();\n\n    // Initial messages (0-3 seconds)\n    if (elapsedTime >= 0) {\n      newMessages.push({\n        id: 'initial',\n        message: 'Starting search for tracking information...',\n        timestamp: now,\n        type: 'status',\n        icon: '🔍',\n        priority: 1,\n      });\n    }\n\n    // Early progress messages (3-8 seconds)\n    if (elapsedTime > 3000) {\n      newMessages.push({\n        id: 'checking-sources',\n        message: 'Checking multiple data sources...',\n        timestamp: now,\n        type: 'info',\n        icon: '📡',\n        priority: 2,\n      });\n    }\n\n    // Provider-specific messages\n    if (currentProvider && elapsedTime > 2000) {\n      const providerMessages = getProviderSpecificMessages(currentProvider, providerTier, elapsedTime);\n      newMessages.push(...providerMessages.map(msg => ({ ...msg, timestamp: now })));\n    }\n\n    // Intermediate messages (8-15 seconds)\n    if (elapsedTime > 8000) {\n      newMessages.push({\n        id: 'trying-alternatives',\n        message: 'Trying alternative providers...',\n        timestamp: now,\n        type: 'info',\n        icon: '🔄',\n        priority: 4,\n      });\n    }\n\n    // Warning messages (15-20 seconds)\n    if (elapsedTime > 15000) {\n      newMessages.push({\n        id: 'slow-response',\n        message: 'Some APIs are responding slowly...',\n        timestamp: now,\n        type: 'warning',\n        icon: '⚠️',\n        priority: 5,\n      });\n    }\n\n    // Helpful tips (20+ seconds)\n    if (elapsedTime > 20000) {\n      newMessages.push({\n        id: 'patience-tip',\n        message: 'Almost there! Free tier APIs may take longer.',\n        timestamp: now,\n        type: 'tip',\n        icon: '💡',\n        priority: 6,\n      });\n    }\n\n    // Extended wait messages (25+ seconds)\n    if (elapsedTime > 25000) {\n      newMessages.push({\n        id: 'exploring-sources',\n        message: 'Exploring additional data sources...',\n        timestamp: now,\n        type: 'info',\n        icon: '🌐',\n        priority: 7,\n      });\n    }\n\n    // Sort by priority and update messages\n    const sortedMessages = newMessages.sort((a, b) => b.priority - a.priority);\n    setMessages(sortedMessages);\n  }, [isLoading, elapsedTime, currentProvider, providerTier]);\n\n  // Cycle through messages for compact variant\n  useEffect(() => {\n    if (variant !== 'compact' || messages.length <= 1) return;\n\n    const interval = setInterval(() => {\n      setCurrentMessageIndex(prev => (prev + 1) % messages.length);\n    }, 3000); // Change message every 3 seconds\n\n    return () => clearInterval(interval);\n  }, [messages.length, variant]);\n\n  /**\n   * Get provider-specific messages\n   */\n  function getProviderSpecificMessages(\n    provider: string, \n    tier?: 'free' | 'freemium' | 'premium', \n    elapsed?: number\n  ): Omit<ProgressiveMessage, 'timestamp'>[] {\n    const messages: Omit<ProgressiveMessage, 'timestamp'>[] = [];\n\n    // Provider connection message\n    messages.push({\n      id: `provider-${provider.toLowerCase()}`,\n      message: `Contacting ${provider}...`,\n      type: 'status',\n      icon: '📞',\n      priority: 3,\n    });\n\n    // Tier-specific messages\n    if (tier === 'free' && elapsed && elapsed > 5000) {\n      messages.push({\n        id: 'free-tier-delay',\n        message: `${provider} (free tier) may take longer...`,\n        type: 'info',\n        icon: '⏳',\n        priority: 4,\n      });\n    }\n\n    if (tier === 'premium' && elapsed && elapsed > 3000) {\n      messages.push({\n        id: 'premium-processing',\n        message: `${provider} is processing your request...`,\n        type: 'info',\n        icon: '⚡',\n        priority: 4,\n      });\n    }\n\n    // Provider-specific tips\n    const providerTips = getProviderTips(provider);\n    if (providerTips && elapsed && elapsed > 10000) {\n      messages.push({\n        id: `tip-${provider.toLowerCase()}`,\n        message: providerTips,\n        type: 'tip',\n        icon: '💡',\n        priority: 5,\n      });\n    }\n\n    return messages;\n  }\n\n  /**\n   * Get provider-specific tips\n   */\n  function getProviderTips(provider: string): string | null {\n    const tips: Record<string, string> = {\n      'Track-Trace': 'Track-Trace provides basic tracking for most carriers.',\n      'ShipsGo': 'ShipsGo offers enhanced vessel tracking information.',\n      'SeaRates': 'SeaRates includes shipping rates and route optimization.',\n      'Project44': 'Project44 provides enterprise-grade logistics data.',\n      'Marine Traffic': 'Marine Traffic specializes in real-time vessel positions.',\n      'Vessel Finder': 'Vessel Finder offers comprehensive ship tracking.',\n    };\n\n    return tips[provider] || null;\n  }\n\n  /**\n   * Get message type styling\n   */\n  function getMessageTypeStyles(type: ProgressiveMessage['type']) {\n    switch (type) {\n      case 'warning':\n        return 'text-yellow-700 bg-yellow-50 border-yellow-200';\n      case 'tip':\n        return 'text-blue-700 bg-blue-50 border-blue-200';\n      case 'status':\n        return 'text-green-700 bg-green-50 border-green-200';\n      default:\n        return 'text-gray-700 bg-gray-50 border-gray-200';\n    }\n  }\n\n  /**\n   * Format elapsed time for display\n   */\n  function formatElapsedTime(ms: number): string {\n    if (ms < 1000) return 'now';\n    if (ms < 60000) return `${Math.round(ms / 1000)}s ago`;\n    return `${Math.floor(ms / 60000)}m ago`;\n  }\n\n  if (!isLoading || messages.length === 0) return null;\n\n  // Compact variant - show one message at a time\n  if (variant === 'compact') {\n    const currentMessage = messages[currentMessageIndex];\n    if (!currentMessage) return null;\n\n    return (\n      <div className={`${className}`}>\n        <div className={`flex items-center space-x-2 p-3 rounded-md border ${getMessageTypeStyles(currentMessage.type)}`}>\n          {currentMessage.icon && (\n            <span className=\"text-lg\" role=\"img\" aria-label=\"status\">\n              {currentMessage.icon}\n            </span>\n          )}\n          <div className=\"flex-1\">\n            <p className=\"text-sm font-medium\">{currentMessage.message}</p>\n            {messages.length > 1 && (\n              <div className=\"flex items-center space-x-1 mt-1\">\n                {messages.map((_, index) => (\n                  <div\n                    key={index}\n                    className={`w-1.5 h-1.5 rounded-full transition-colors ${\n                      index === currentMessageIndex ? 'bg-current' : 'bg-current opacity-30'\n                    }`}\n                  />\n                ))}\n              </div>\n            )}\n          </div>\n        </div>\n      </div>\n    );\n  }\n\n  // Detailed variant - show all messages\n  return (\n    <div className={`space-y-2 ${className}`}>\n      {messages.slice(0, 3).map((message) => ( // Show only the 3 most recent/important messages\n        <div\n          key={message.id}\n          className={`flex items-start space-x-2 p-3 rounded-md border ${getMessageTypeStyles(message.type)} transition-all duration-300 ease-in-out`}\n        >\n          {message.icon && (\n            <span className=\"text-base mt-0.5\" role=\"img\" aria-label=\"status\">\n              {message.icon}\n            </span>\n          )}\n          <div className=\"flex-1 min-w-0\">\n            <p className=\"text-sm font-medium\">{message.message}</p>\n            <p className=\"text-xs opacity-75 mt-1\">\n              {formatElapsedTime(Date.now() - message.timestamp)}\n            </p>\n          </div>\n          \n          {/* Message type indicator */}\n          <div className=\"flex-shrink-0\">\n            {message.type === 'warning' && (\n              <svg className=\"w-4 h-4 text-yellow-600\" fill=\"currentColor\" viewBox=\"0 0 20 20\">\n                <path fillRule=\"evenodd\" d=\"M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z\" clipRule=\"evenodd\" />\n              </svg>\n            )}\n            {message.type === 'tip' && (\n              <svg className=\"w-4 h-4 text-blue-600\" fill=\"currentColor\" viewBox=\"0 0 20 20\">\n                <path fillRule=\"evenodd\" d=\"M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z\" clipRule=\"evenodd\" />\n              </svg>\n            )}\n            {message.type === 'status' && (\n              <div className=\"w-2 h-2 bg-current rounded-full animate-pulse\" />\n            )}\n          </div>\n        </div>\n      ))}\n      \n      {/* Show message count if there are more */}\n      {messages.length > 3 && (\n        <div className=\"text-center\">\n          <button className=\"text-xs text-gray-500 hover:text-gray-700 transition-colors\">\n            +{messages.length - 3} more messages\n          </button>\n        </div>\n      )}\n    </div>\n  );\n}\n\nexport default ProgressiveMessageDisplay;\n"}
-</invoke>
+import React, { useState, useEffect } from 'react';
+
+interface ProgressiveMessageDisplayProps {
+  isLoading: boolean;
+  elapsedTime: number;
+  currentProvider?: string;
+  providerTier?: 'free' | 'freemium' | 'premium';
+  variant?: 'compact' | 'detailed';
+  className?: string;
+}
+
+interface ProgressiveMessage {
+  id: string;
+  message: string;
+  timestamp: number;
+  type: 'info' | 'warning' | 'tip' | 'status';
+  icon?: string;
+  priority: number;
+}
+
+/**
+ * Progressive message display that shows contextual messages based on loading progress
+ * Implements Requirements 5.1, 5.2 for progressive loading messages
+ */
+export function ProgressiveMessageDisplay({
+  isLoading,
+  elapsedTime,
+  currentProvider,
+  providerTier,
+  variant = 'detailed',
+  className = '',
+}: ProgressiveMessageDisplayProps) {
+  const [messages, setMessages] = useState<ProgressiveMessage[]>([]);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+
+  // Generate progressive messages based on elapsed time and context
+  useEffect(() => {
+    if (!isLoading) {
+      setMessages([]);
+      setCurrentMessageIndex(0);
+      return;
+    }
+
+    const newMessages: ProgressiveMessage[] = [];
+    const now = Date.now();
+
+    // Initial messages (0-3 seconds)
+    if (elapsedTime >= 0) {
+      newMessages.push({
+        id: 'initial',
+        message: 'Starting search for tracking information...',
+        timestamp: now,
+        type: 'status',
+        icon: '🔍',
+        priority: 1,
+      });
+    }
+
+    // Early progress messages (3-8 seconds)
+    if (elapsedTime > 3000) {
+      newMessages.push({
+        id: 'checking-sources',
+        message: 'Checking multiple data sources...',
+        timestamp: now,
+        type: 'info',
+        icon: '📡',
+        priority: 2,
+      });
+    }
+
+    // Provider-specific messages
+    if (currentProvider && elapsedTime > 2000) {
+      const providerMessages = getProviderSpecificMessages(currentProvider, providerTier, elapsedTime);
+      newMessages.push(...providerMessages.map(msg => ({ ...msg, timestamp: now })));
+    }
+
+    // Intermediate messages (8-15 seconds)
+    if (elapsedTime > 8000) {
+      newMessages.push({
+        id: 'trying-alternatives',
+        message: 'Trying alternative providers...',
+        timestamp: now,
+        type: 'info',
+        icon: '🔄',
+        priority: 4,
+      });
+    }
+
+    // Warning messages (15-20 seconds)
+    if (elapsedTime > 15000) {
+      newMessages.push({
+        id: 'slow-response',
+        message: 'Some APIs are responding slowly...',
+        timestamp: now,
+        type: 'warning',
+        icon: '⚠️',
+        priority: 5,
+      });
+    }
+
+    // Helpful tips (20+ seconds)
+    if (elapsedTime > 20000) {
+      newMessages.push({
+        id: 'patience-tip',
+        message: 'Almost there! Free tier APIs may take longer.',
+        timestamp: now,
+        type: 'tip',
+        icon: '💡',
+        priority: 6,
+      });
+    }
+
+    // Extended wait messages (25+ seconds)
+    if (elapsedTime > 25000) {
+      newMessages.push({
+        id: 'exploring-sources',
+        message: 'Exploring additional data sources...',
+        timestamp: now,
+        type: 'info',
+        icon: '🌐',
+        priority: 7,
+      });
+    }
+
+    // Sort by priority and update messages
+    const sortedMessages = newMessages.sort((a, b) => b.priority - a.priority);
+    setMessages(sortedMessages);
+  }, [isLoading, elapsedTime, currentProvider, providerTier]);
+
+  // Cycle through messages for compact variant
+  useEffect(() => {
+    if (variant !== 'compact' || messages.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentMessageIndex(prev => (prev + 1) % messages.length);
+    }, 3000); // Change message every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [messages.length, variant]);
+
+  /**
+   * Get provider-specific messages
+   */
+  function getProviderSpecificMessages(
+    provider: string, 
+    tier?: 'free' | 'freemium' | 'premium', 
+    elapsed?: number
+  ): Omit<ProgressiveMessage, 'timestamp'>[] {
+    const messages: Omit<ProgressiveMessage, 'timestamp'>[] = [];
+
+    // Provider connection message
+    messages.push({
+      id: `provider-${provider.toLowerCase()}`,
+      message: `Contacting ${provider}...`,
+      type: 'status',
+      icon: '📞',
+      priority: 3,
+    });
+
+    // Tier-specific messages
+    if (tier === 'free' && elapsed && elapsed > 5000) {
+      messages.push({
+        id: 'free-tier-delay',
+        message: `${provider} (free tier) may take longer...`,
+        type: 'info',
+        icon: '⏳',
+        priority: 4,
+      });
+    }
+
+    if (tier === 'premium' && elapsed && elapsed > 3000) {
+      messages.push({
+        id: 'premium-processing',
+        message: `${provider} is processing your request...`,
+        type: 'info',
+        icon: '⚡',
+        priority: 4,
+      });
+    }
+
+    // Provider-specific tips
+    const providerTips = getProviderTips(provider);
+    if (providerTips && elapsed && elapsed > 10000) {
+      messages.push({
+        id: `tip-${provider.toLowerCase()}`,
+        message: providerTips,
+        type: 'tip',
+        icon: '💡',
+        priority: 5,
+      });
+    }
+
+    return messages;
+  }
+
+  /**
+   * Get provider-specific tips
+   */
+  function getProviderTips(provider: string): string | null {
+    const tips: Record<string, string> = {
+      'Track-Trace': 'Track-Trace provides basic tracking for most carriers.',
+      'ShipsGo': 'ShipsGo offers enhanced vessel tracking information.',
+      'SeaRates': 'SeaRates includes shipping rates and route optimization.',
+      'Project44': 'Project44 provides enterprise-grade logistics data.',
+      'Marine Traffic': 'Marine Traffic specializes in real-time vessel positions.',
+      'Vessel Finder': 'Vessel Finder offers comprehensive ship tracking.',
+    };
+
+    return tips[provider] || null;
+  }
+
+  /**
+   * Get message type styling
+   */
+  function getMessageTypeStyles(type: ProgressiveMessage['type']) {
+    switch (type) {
+      case 'warning':
+        return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+      case 'tip':
+        return 'text-blue-700 bg-blue-50 border-blue-200';
+      case 'status':
+        return 'text-green-700 bg-green-50 border-green-200';
+      default:
+        return 'text-gray-700 bg-gray-50 border-gray-200';
+    }
+  }
+
+  /**
+   * Format elapsed time for display
+   */
+  function formatElapsedTime(ms: number): string {
+    if (ms < 1000) return 'now';
+    if (ms < 60000) return `${Math.round(ms / 1000)}s ago`;
+    return `${Math.floor(ms / 60000)}m ago`;
+  }
+
+  if (!isLoading || messages.length === 0) return null;
+
+  // Compact variant - show one message at a time
+  if (variant === 'compact') {
+    const currentMessage = messages[currentMessageIndex];
+    if (!currentMessage) return null;
+
+    return (
+      <div className={`${className}`}>
+        <div className={`flex items-center space-x-2 p-3 rounded-md border ${getMessageTypeStyles(currentMessage.type)}`}>
+          {currentMessage.icon && (
+            <span className="text-lg" role="img" aria-label="status">
+              {currentMessage.icon}
+            </span>
+          )}
+          <div className="flex-1">
+            <p className="text-sm font-medium">{currentMessage.message}</p>
+            {messages.length > 1 && (
+              <div className="flex items-center space-x-1 mt-1">
+                {messages.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                      index === currentMessageIndex ? 'bg-current' : 'bg-current opacity-30'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Detailed variant - show all messages
+  return (
+    <div className={`space-y-2 ${className}`}>
+      {messages.slice(0, 3).map((message) => ( // Show only the 3 most recent/important messages
+        <div
+          key={message.id}
+          className={`flex items-start space-x-2 p-3 rounded-md border ${getMessageTypeStyles(message.type)} transition-all duration-300 ease-in-out`}
+        >
+          {message.icon && (
+            <span className="text-base mt-0.5" role="img" aria-label="status">
+              {message.icon}
+            </span>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">{message.message}</p>
+            <p className="text-xs opacity-75 mt-1">
+              {formatElapsedTime(Date.now() - message.timestamp)}
+            </p>
+          </div>
+          
+          {/* Message type indicator */}
+          <div className="flex-shrink-0">
+            {message.type === 'warning' && (
+              <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            )}
+            {message.type === 'tip' && (
+              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            )}
+            {message.type === 'status' && (
+              <div className="w-2 h-2 bg-current rounded-full animate-pulse" />
+            )}
+          </div>
+        </div>
+      ))}
+      
+      {/* Show message count if there are more */}
+      {messages.length > 3 && (
+        <div className="text-center">
+          <button className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
+            +{messages.length - 3} more messages
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ProgressiveMessageDisplay;

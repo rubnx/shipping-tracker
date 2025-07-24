@@ -4,7 +4,7 @@ import SearchComponent from './components/SearchComponent';
 import { MobileSearchComponent } from './components/SearchComponent/MobileSearchComponent';
 import TimelineComponent from './components/TimelineComponent';
 import { SwipeableTimeline } from './components/TimelineComponent/SwipeableTimeline';
-import { MapComponent } from './components/MapComponent';
+// import { MapComponent } from './components/MapComponent'; // Temporarily disabled due to compilation issues
 import ShipmentDetailsComponent from './components/ShipmentDetailsComponent';
 import { MobileShipmentDetails } from './components/ShipmentDetails/MobileShipmentDetails';
 import { NetworkStatus } from './components/NetworkStatus';
@@ -355,22 +355,16 @@ function App() {
                 />
               </div>
 
-              {/* Map */}
+              {/* Map - Temporarily disabled due to compilation issues */}
               <div className="order-1 lg:order-2">
                 {currentShipment.route && (
-                  <MapComponent
-                    route={currentShipment.route}
-                    vesselPosition={currentShipment.vessel?.currentPosition}
-                    ports={[
-                      currentShipment.route.origin,
-                      currentShipment.route.destination,
-                      ...currentShipment.route.intermediateStops
-                    ]}
-                    onMarkerClick={handleMarkerClick}
-                    height={400}
-                    showControls={true}
-                    interactive={true}
-                  />
+                  <div className="h-96 bg-blue-50 rounded-lg flex items-center justify-center border-2 border-dashed border-blue-200">
+                    <div className="text-center">
+                      <p className="text-blue-700 font-medium">Route: {currentShipment.route.origin.name} → {currentShipment.route.destination.name}</p>
+                      <p className="text-blue-600 text-sm mt-1">Distance: {currentShipment.route.distance} km</p>
+                      <p className="text-blue-500 text-xs mt-2">(Map component temporarily disabled)</p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
