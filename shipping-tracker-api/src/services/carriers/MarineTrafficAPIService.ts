@@ -92,7 +92,7 @@ export class MarineTrafficAPIService {
 
   constructor() {
     this.baseUrl = 'https://services.marinetraffic.com/api';
-    this.apiKey = config.apiKeys.marineTraffic;
+    this.apiKey = config.apiProviders.marineTraffic?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ Marine Traffic API key not configured');

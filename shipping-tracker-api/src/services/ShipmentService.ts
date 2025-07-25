@@ -1,6 +1,6 @@
 import { ShipmentRepository } from '../repositories/ShipmentRepository';
 import { SearchHistoryRepository } from '../repositories/SearchHistoryRepository';
-import { APIAggregator } from './APIAggregator';
+import { APIAggregator } from './SimpleAPIAggregator';
 import { 
   ShipmentRecord, 
   CreateShipmentData, 

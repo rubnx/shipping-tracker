@@ -196,7 +196,7 @@ export class Project44APIService {
 
   constructor() {
     this.baseUrl = 'https://api.project44.com/v4/tracking';
-    this.apiKey = config.apiKeys.project44;
+    this.apiKey = config.apiProviders.project44?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ Project44 API key not configured');

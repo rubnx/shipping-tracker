@@ -1,4 +1,9 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios from 'axios';
+
+type AxiosInstance = typeof axios;
+type AxiosRequestConfig = Parameters<typeof axios.request>[0];
+type AxiosResponse<T = any> = Awaited<ReturnType<typeof axios.get<T>>>;
+type AxiosError = any;
 
 /**
  * API Client service with proper connection handling

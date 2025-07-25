@@ -116,7 +116,7 @@ export class COSCOAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.cosco-shipping.com/tracking';
-    this.apiKey = config.apiKeys.cosco;
+    this.apiKey = config.apiProviders.cosco?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ COSCO API key not configured');

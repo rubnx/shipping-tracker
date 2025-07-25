@@ -1,0 +1,9 @@
+{
+  "watch": ["src/simple-index.ts", "src/config", "src/services/APIAggregator.ts", "src/types"],
+  "ext": "ts,json",
+  "ignore": ["src/**/*.test.ts"],
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "exec": "npx ts-node --project tsconfig.simple.json src/simple-index.ts"
+}

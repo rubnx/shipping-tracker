@@ -117,7 +117,7 @@ export class YangMingAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.yangming.com/track';
-    this.apiKey = config.apiKeys.yangMing;
+    this.apiKey = config.apiProviders.yangMing?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ Yang Ming API key not configured');

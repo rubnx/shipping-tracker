@@ -75,7 +75,7 @@ export class APIAggregator {
       {
         name: 'maersk',
         baseUrl: 'https://api.maersk.com/track',
-        apiKey: config.apiKeys.maersk,
+        apiKey: config.apiProviders.maersk?.apiKey || '',
         rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
         reliability: 0.95,
         timeout: 10000,
@@ -87,7 +87,7 @@ export class APIAggregator {
       {
         name: 'msc',
         baseUrl: 'https://api.msc.com/track',
-        apiKey: config.apiKeys.msc,
+        apiKey: config.apiProviders.msc?.apiKey || '',
         rateLimit: { requestsPerMinute: 40, requestsPerHour: 800 },
         reliability: 0.88,
         timeout: 12000,
@@ -99,7 +99,7 @@ export class APIAggregator {
       {
         name: 'cma-cgm',
         baseUrl: 'https://api.cma-cgm.com/tracking',
-        apiKey: config.apiKeys.cmaCgm,
+        apiKey: config.apiProviders.cmaCgm?.apiKey || '',
         rateLimit: { requestsPerMinute: 25, requestsPerHour: 400 },
         reliability: 0.85,
         timeout: 9000,
@@ -111,7 +111,7 @@ export class APIAggregator {
       {
         name: 'cosco',
         baseUrl: 'https://api.cosco-shipping.com/tracking',
-        apiKey: config.apiKeys.cosco,
+        apiKey: config.apiProviders.cosco?.apiKey || '',
         rateLimit: { requestsPerMinute: 35, requestsPerHour: 600 },
         reliability: 0.87,
         timeout: 10000,
@@ -123,7 +123,7 @@ export class APIAggregator {
       {
         name: 'hapag-lloyd',
         baseUrl: 'https://api.hapag-lloyd.com/tracking',
-        apiKey: config.apiKeys.hapagLloyd,
+        apiKey: config.apiProviders.hapagLloyd?.apiKey || '',
         rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
         reliability: 0.90,
         timeout: 8000,
@@ -135,7 +135,7 @@ export class APIAggregator {
       {
         name: 'evergreen',
         baseUrl: 'https://api.evergreen-line.com/tracking',
-        apiKey: config.apiKeys.evergreen,
+        apiKey: config.apiProviders.evergreen?.apiKey || '',
         rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
         reliability: 0.84,
         timeout: 9000,
@@ -147,7 +147,7 @@ export class APIAggregator {
       {
         name: 'one-line',
         baseUrl: 'https://api.one-line.com/tracking',
-        apiKey: config.apiKeys.oneLine,
+        apiKey: config.apiProviders.oneLine?.apiKey || '',
         rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
         reliability: 0.86,
         timeout: 9000,
@@ -159,7 +159,7 @@ export class APIAggregator {
       {
         name: 'yang-ming',
         baseUrl: 'https://api.yangming.com/tracking',
-        apiKey: config.apiKeys.yangMing,
+        apiKey: config.apiProviders.yangMing?.apiKey || '',
         rateLimit: { requestsPerMinute: 25, requestsPerHour: 400 },
         reliability: 0.82,
         timeout: 8000,
@@ -171,7 +171,7 @@ export class APIAggregator {
       {
         name: 'zim',
         baseUrl: 'https://api.zim.com/tracking',
-        apiKey: config.apiKeys.zim,
+        apiKey: config.apiProviders.zim?.apiKey || '',
         rateLimit: { requestsPerMinute: 20, requestsPerHour: 300 },
         reliability: 0.80,
         timeout: 8000,
@@ -185,7 +185,7 @@ export class APIAggregator {
       {
         name: 'shipsgo',
         baseUrl: 'https://api.shipsgo.com/v2/tracking',
-        apiKey: config.apiKeys.shipsgo,
+        apiKey: config.apiProviders.shipsGo?.apiKey || '',
         rateLimit: { requestsPerMinute: 100, requestsPerHour: 2000 },
         reliability: 0.88,
         timeout: 8000,
@@ -198,7 +198,7 @@ export class APIAggregator {
       {
         name: 'searates',
         baseUrl: 'https://api.searates.com/tracking',
-        apiKey: config.apiKeys.searates,
+        apiKey: config.apiProviders.seaRates?.apiKey || '',
         rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
         reliability: 0.85,
         timeout: 8000,
@@ -211,7 +211,7 @@ export class APIAggregator {
       {
         name: 'project44',
         baseUrl: 'https://api.project44.com/v4/tracking',
-        apiKey: config.apiKeys.project44,
+        apiKey: config.apiProviders.project44?.apiKey || '',
         rateLimit: { requestsPerMinute: 200, requestsPerHour: 5000 },
         reliability: 0.93,
         timeout: 10000,
@@ -226,7 +226,7 @@ export class APIAggregator {
       {
         name: 'marine-traffic',
         baseUrl: 'https://api.marinetraffic.com/v1/tracking',
-        apiKey: config.apiKeys.marineTraffic,
+        apiKey: config.apiProviders.marineTraffic?.apiKey || '',
         rateLimit: { requestsPerMinute: 10, requestsPerHour: 100 },
         reliability: 0.70,
         timeout: 10000,
@@ -238,7 +238,7 @@ export class APIAggregator {
       {
         name: 'vessel-finder',
         baseUrl: 'https://api.vesselfinder.com/tracking',
-        apiKey: config.apiKeys.vesselFinder,
+        apiKey: config.apiProviders.vesselFinder?.apiKey || '',
         rateLimit: { requestsPerMinute: 15, requestsPerHour: 200 },
         reliability: 0.72,
         timeout: 8000,
@@ -252,7 +252,7 @@ export class APIAggregator {
       {
         name: 'track-trace',
         baseUrl: 'https://api.track-trace.com/v1/tracking',
-        apiKey: config.apiKeys.trackTrace,
+        apiKey: config.apiProviders.trackTrace?.apiKey || '',
         rateLimit: { requestsPerMinute: 50, requestsPerHour: 500 },
         reliability: 0.68,
         timeout: 8000,
@@ -273,7 +273,768 @@ export class APIAggregator {
   }
 
   /**
-   * Fetch tracking data from multiple sources with smart routing
+   * Retry mechanism with exponential backoff
+   */
+  private async retryWithBackoff<T>(
+    operation: () => Promise<T>,
+    maxRetries: number = 3,
+    baseDelay: number = 1000,
+    maxDelay: number = 10000,
+    operationName: string = 'API call'
+  ): Promise<T> {
+    let lastError: Error;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), maxDelay);
+          const jitter = Math.random() * 0.1 * delay; // Add 10% jitter
+          const totalDelay = delay + jitter;
+          
+          console.log(`🔄 Retry attempt ${attempt}/${maxRetries} for ${operationName} in ${Math.round(totalDelay)}ms`);
+          await new Promise(resolve => setTimeout(resolve, totalDelay));
+        }
+        
+        return await operation();
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        
+        if (attempt === maxRetries) {
+          console.error(`❌ All retry attempts failed for ${operationName}:`, lastError.message);
+          throw lastError;
+        }
+        
+        // Don't retry on certain error types
+        if (this.isNonRetryableError(error)) {
+          console.log(`🚫 Non-retryable error for ${operationName}, skipping retries:`, lastError.message);
+          throw lastError;
+        }
+        
+        console.warn(`⚠️ Attempt ${attempt + 1} failed for ${operationName}:`, lastError.message);
+      }
+    }
+    
+    throw lastError!;
+  }
+
+  /**
+   * Check if an error should not be retried
+   */
+  private isNonRetryableError(error: any): boolean {
+    // Don't retry on authentication errors, bad requests, etc.
+    const statusCode = error?.response?.status || error?.statusCode;
+    if (statusCode) {
+      return statusCode >= 400 && statusCode < 500 && statusCode !== 429; // Don't retry 4xx except rate limits
+    }
+    
+    // Don't retry on specific error types
+    const errorMessage = error?.message?.toLowerCase() || '';
+    return errorMessage.includes('invalid api key') || 
+           errorMessage.includes('unauthorized') ||
+           errorMessage.includes('forbidden') ||
+           errorMessage.includes('bad request');
+  }
+
+  /**
+   * Circuit breaker state management
+   */
+  private circuitBreakers = new Map<string, {
+    state: 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+    failureCount: number;
+    lastFailureTime: number;
+    successCount: number;
+    nextAttemptTime: number;
+  }>();
+
+  private readonly CIRCUIT_BREAKER_CONFIG = {
+    failureThreshold: 5,      // Open circuit after 5 failures
+    recoveryTimeout: 60000,   // Try to recover after 1 minute
+    successThreshold: 3,      // Close circuit after 3 successes in half-open state
+  };
+
+  /**
+   * Check if circuit breaker allows the request
+   */
+  private canMakeRequest(providerName: string): boolean {
+    const breaker = this.circuitBreakers.get(providerName);
+    if (!breaker) {
+      // Initialize circuit breaker for new provider
+      this.circuitBreakers.set(providerName, {
+        state: 'CLOSED',
+        failureCount: 0,
+        lastFailureTime: 0,
+        successCount: 0,
+        nextAttemptTime: 0,
+      });
+      return true;
+    }
+
+    const now = Date.now();
+
+    switch (breaker.state) {
+      case 'CLOSED':
+        return true;
+      
+      case 'OPEN':
+        if (now >= breaker.nextAttemptTime) {
+          breaker.state = 'HALF_OPEN';
+          breaker.successCount = 0;
+          console.log(`🔄 Circuit breaker for ${providerName} moving to HALF_OPEN state`);
+          return true;
+        }
+        console.log(`🚫 Circuit breaker for ${providerName} is OPEN, blocking request`);
+        return false;
+      
+      case 'HALF_OPEN':
+        return true;
+      
+      default:
+        return true;
+    }
+  }
+
+  /**
+   * Record success for circuit breaker
+   */
+  private recordCircuitBreakerSuccess(providerName: string): void {
+    const breaker = this.circuitBreakers.get(providerName);
+    if (!breaker) return;
+
+    switch (breaker.state) {
+      case 'HALF_OPEN':
+        breaker.successCount++;
+        if (breaker.successCount >= this.CIRCUIT_BREAKER_CONFIG.successThreshold) {
+          breaker.state = 'CLOSED';
+          breaker.failureCount = 0;
+          console.log(`✅ Circuit breaker for ${providerName} CLOSED after successful recovery`);
+        }
+        break;
+      
+      case 'CLOSED':
+        breaker.failureCount = Math.max(0, breaker.failureCount - 1); // Gradually reduce failure count
+        break;
+    }
+  }
+
+  /**
+   * Record failure for circuit breaker
+   */
+  private recordCircuitBreakerFailure(providerName: string): void {
+    const breaker = this.circuitBreakers.get(providerName);
+    if (!breaker) return;
+
+    const now = Date.now();
+    breaker.failureCount++;
+    breaker.lastFailureTime = now;
+
+    if (breaker.state === 'CLOSED' && breaker.failureCount >= this.CIRCUIT_BREAKER_CONFIG.failureThreshold) {
+      breaker.state = 'OPEN';
+      breaker.nextAttemptTime = now + this.CIRCUIT_BREAKER_CONFIG.recoveryTimeout;
+      console.log(`🔴 Circuit breaker for ${providerName} OPENED after ${breaker.failureCount} failures`);
+    } else if (breaker.state === 'HALF_OPEN') {
+      breaker.state = 'OPEN';
+      breaker.nextAttemptTime = now + this.CIRCUIT_BREAKER_CONFIG.recoveryTimeout;
+      console.log(`🔴 Circuit breaker for ${providerName} back to OPEN state after failure during recovery`);
+    }
+  }
+
+  /**
+   * Get circuit breaker status for monitoring
+   */
+  public getCircuitBreakerStatus(): Record<string, {
+    state: string;
+    failureCount: number;
+    lastFailureTime: number;
+    nextAttemptTime?: number;
+  }> {
+    const status: Record<string, any> = {};
+    
+    this.circuitBreakers.forEach((breaker, providerName) => {
+      status[providerName] = {
+        state: breaker.state,
+        failureCount: breaker.failureCount,
+        lastFailureTime: breaker.lastFailureTime,
+        ...(breaker.state === 'OPEN' && { nextAttemptTime: breaker.nextAttemptTime })
+      };
+    });
+    
+    return status;
+  }
+
+  /**
+   * Reset circuit breaker for a specific provider (for manual recovery)
+   */
+  public resetCircuitBreaker(providerName: string): boolean {
+    const breaker = this.circuitBreakers.get(providerName);
+    if (breaker) {
+      breaker.state = 'CLOSED';
+      breaker.failureCount = 0;
+      breaker.successCount = 0;
+      breaker.nextAttemptTime = 0;
+      console.log(`🔄 Circuit breaker for ${providerName} manually reset`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * API Key Management and Rotation
+   */
+  private apiKeyRotation = new Map<string, {
+    keys: string[];
+    currentIndex: number;
+    lastRotation: number;
+    rotationInterval: number; // in milliseconds
+  }>();
+
+  /**
+   * Initialize API key rotation for a provider
+   */
+  public initializeAPIKeyRotation(
+    providerName: string, 
+    apiKeys: string[], 
+    rotationIntervalHours: number = 24
+  ): void {
+    if (apiKeys.length === 0) return;
+    
+    this.apiKeyRotation.set(providerName, {
+      keys: apiKeys,
+      currentIndex: 0,
+      lastRotation: Date.now(),
+      rotationInterval: rotationIntervalHours * 60 * 60 * 1000,
+    });
+    
+    console.log(`🔑 API key rotation initialized for ${providerName} with ${apiKeys.length} keys`);
+  }
+
+  /**
+   * Get current API key for a provider (with automatic rotation)
+   */
+  public getCurrentAPIKey(providerName: string): string | undefined {
+    const rotation = this.apiKeyRotation.get(providerName);
+    if (!rotation || rotation.keys.length === 0) {
+      return config.apiProviders[providerName]?.apiKey;
+    }
+
+    const now = Date.now();
+    
+    // Check if rotation is needed
+    if (now - rotation.lastRotation >= rotation.rotationInterval) {
+      rotation.currentIndex = (rotation.currentIndex + 1) % rotation.keys.length;
+      rotation.lastRotation = now;
+      console.log(`🔄 API key rotated for ${providerName} to index ${rotation.currentIndex}`);
+    }
+
+    return rotation.keys[rotation.currentIndex];
+  }
+
+  /**
+   * Force API key rotation for a provider (useful when current key fails)
+   */
+  public rotateAPIKey(providerName: string): string | undefined {
+    const rotation = this.apiKeyRotation.get(providerName);
+    if (!rotation || rotation.keys.length <= 1) {
+      return this.getCurrentAPIKey(providerName);
+    }
+
+    rotation.currentIndex = (rotation.currentIndex + 1) % rotation.keys.length;
+    rotation.lastRotation = Date.now();
+    
+    console.log(`🔄 API key manually rotated for ${providerName} to index ${rotation.currentIndex}`);
+    return rotation.keys[rotation.currentIndex];
+  }
+
+  /**
+   * Get API key rotation status
+   */
+  public getAPIKeyRotationStatus(): Record<string, {
+    totalKeys: number;
+    currentIndex: number;
+    lastRotation: Date;
+    nextRotation: Date;
+  }> {
+    const status: Record<string, any> = {};
+    
+    this.apiKeyRotation.forEach((rotation, providerName) => {
+      status[providerName] = {
+        totalKeys: rotation.keys.length,
+        currentIndex: rotation.currentIndex,
+        lastRotation: new Date(rotation.lastRotation),
+        nextRotation: new Date(rotation.lastRotation + rotation.rotationInterval),
+      };
+    });
+    
+    return status;
+  }
+
+  /**
+   * Provider-specific data normalization
+   */
+  public normalizeProviderData(rawData: RawTrackingData): RawTrackingData {
+    if (!rawData.data) return rawData;
+
+    const normalizedData = { ...rawData };
+    
+    // Provider-specific normalization rules
+    switch (rawData.provider) {
+      case 'track-trace':
+        normalizedData.data = this.normalizeTrackTraceData(rawData.data);
+        break;
+      case 'shipsgo':
+        normalizedData.data = this.normalizeShipsGoData(rawData.data);
+        break;
+      case 'searates':
+        normalizedData.data = this.normalizeSeaRatesData(rawData.data);
+        break;
+      case 'maersk':
+        normalizedData.data = this.normalizeMaerskData(rawData.data);
+        break;
+      case 'msc':
+        normalizedData.data = this.normalizeMSCData(rawData.data);
+        break;
+      default:
+        // Generic normalization for unknown providers
+        normalizedData.data = this.normalizeGenericData(rawData.data);
+    }
+
+    return normalizedData;
+  }
+
+  /**
+   * Normalize Track-Trace specific data
+   */
+  private normalizeTrackTraceData(data: any): any {
+    return {
+      ...data,
+      // Standardize status values
+      status: this.normalizeStatus(data.status, 'track-trace'),
+      // Ensure timeline events have consistent format
+      timeline: data.timeline?.map((event: any, index: number) => ({
+        ...event,
+        id: event.id || `tt-${index}`,
+        status: this.normalizeEventStatus(event.status),
+      })) || [],
+      // Standardize carrier names
+      carrier: this.normalizeCarrierName(data.carrier),
+    };
+  }
+
+  /**
+   * Normalize ShipsGo specific data
+   */
+  private normalizeShipsGoData(data: any): any {
+    return {
+      ...data,
+      status: this.normalizeStatus(data.status, 'shipsgo'),
+      timeline: data.timeline?.map((event: any, index: number) => ({
+        ...event,
+        id: event.id || `sg-${index}`,
+        status: this.normalizeEventStatus(event.status),
+      })) || [],
+      carrier: this.normalizeCarrierName(data.carrier),
+    };
+  }
+
+  /**
+   * Normalize SeaRates specific data
+   */
+  private normalizeSeaRatesData(data: any): any {
+    return {
+      ...data,
+      status: this.normalizeStatus(data.status, 'searates'),
+      timeline: data.timeline?.map((event: any, index: number) => ({
+        ...event,
+        id: event.id || `sr-${index}`,
+        status: this.normalizeEventStatus(event.status),
+      })) || [],
+      carrier: this.normalizeCarrierName(data.carrier),
+    };
+  }
+
+  /**
+   * Normalize Maersk specific data
+   */
+  private normalizeMaerskData(data: any): any {
+    return {
+      ...data,
+      status: this.normalizeStatus(data.status, 'maersk'),
+      timeline: data.timeline?.map((event: any, index: number) => ({
+        ...event,
+        id: event.id || `mk-${index}`,
+        status: this.normalizeEventStatus(event.status),
+      })) || [],
+      carrier: 'Maersk Line', // Standardize Maersk naming
+    };
+  }
+
+  /**
+   * Normalize MSC specific data
+   */
+  private normalizeMSCData(data: any): any {
+    return {
+      ...data,
+      status: this.normalizeStatus(data.status, 'msc'),
+      timeline: data.timeline?.map((event: any, index: number) => ({
+        ...event,
+        id: event.id || `msc-${index}`,
+        status: this.normalizeEventStatus(event.status),
+      })) || [],
+      carrier: 'MSC Mediterranean Shipping Company', // Standardize MSC naming
+    };
+  }
+
+  /**
+   * Generic data normalization for unknown providers
+   */
+  private normalizeGenericData(data: any): any {
+    return {
+      ...data,
+      status: this.normalizeStatus(data.status, 'generic'),
+      timeline: data.timeline?.map((event: any, index: number) => ({
+        ...event,
+        id: event.id || `gen-${index}`,
+        status: this.normalizeEventStatus(event.status),
+      })) || [],
+      carrier: this.normalizeCarrierName(data.carrier),
+    };
+  }
+
+  /**
+   * Normalize status values across providers
+   */
+  private normalizeStatus(status: string, provider: string): string {
+    if (!status) return 'Unknown';
+    
+    const statusLower = status.toLowerCase();
+    
+    // Common status mappings
+    const statusMap: Record<string, string> = {
+      'in_transit': 'In Transit',
+      'in-transit': 'In Transit',
+      'intransit': 'In Transit',
+      'on_water': 'In Transit',
+      'at_sea': 'In Transit',
+      'delivered': 'Delivered',
+      'completed': 'Delivered',
+      'arrived': 'Arrived',
+      'departed': 'Departed',
+      'loaded': 'Loaded',
+      'discharged': 'Discharged',
+      'gate_in': 'Gate In',
+      'gate_out': 'Gate Out',
+      'booked': 'Booked',
+      'confirmed': 'Booked',
+    };
+
+    return statusMap[statusLower] || status;
+  }
+
+  /**
+   * Normalize event status values
+   */
+  private normalizeEventStatus(status: string): string {
+    return this.normalizeStatus(status, 'event');
+  }
+
+  /**
+   * Normalize carrier names
+   */
+  private normalizeCarrierName(carrier: string): string {
+    if (!carrier) return 'Unknown Carrier';
+    
+    const carrierMap: Record<string, string> = {
+      'maersk': 'Maersk Line',
+      'msc': 'MSC Mediterranean Shipping Company',
+      'cosco': 'COSCO Shipping',
+      'cma cgm': 'CMA CGM',
+      'hapag-lloyd': 'Hapag-Lloyd',
+      'evergreen': 'Evergreen Line',
+      'one': 'Ocean Network Express',
+      'yang ming': 'Yang Ming Marine Transport',
+      'zim': 'ZIM Integrated Shipping Services',
+    };
+
+    const carrierLower = carrier.toLowerCase();
+    return carrierMap[carrierLower] || carrier;
+  }
+
+  /**
+   * Generate fallback demo data when all APIs fail
+   */
+  private generateFallbackData(trackingNumber: string, trackingType: TrackingType = 'container'): RawTrackingData {
+    console.log(`🎭 Generating fallback demo data for ${trackingNumber}`);
+    
+    const demoData: ShipmentData = {
+      trackingNumber,
+      trackingType,
+      carrier: 'Demo Carrier (Fallback)',
+      service: 'FCL',
+      status: 'In Transit',
+      lastUpdated: new Date(),
+      dataSource: 'fallback-demo',
+      reliability: 0.5,
+      timeline: [
+        {
+          id: 'demo-1',
+          status: 'Booked',
+          timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          location: 'Shanghai, China',
+          description: 'Shipment booked and confirmed (demo)',
+          isCompleted: true,
+        },
+        {
+          id: 'demo-2',
+          status: 'Departed',
+          timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+          location: 'Shanghai Port, China',
+          description: 'Container departed from origin port (demo)',
+          isCompleted: true,
+        },
+        {
+          id: 'demo-3',
+          status: 'In Transit',
+          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+          location: 'Pacific Ocean',
+          description: 'Vessel en route to destination (demo)',
+          isCompleted: true,
+        },
+        {
+          id: 'demo-4',
+          status: 'Arriving',
+          timestamp: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+          location: 'Los Angeles, CA',
+          description: 'Expected arrival at destination port (demo)',
+          isCompleted: false,
+        },
+      ],
+      route: {
+        origin: {
+          name: 'Shanghai Port',
+          code: 'CNSHA',
+          city: 'Shanghai',
+          country: 'China',
+          timezone: 'Asia/Shanghai',
+          coordinates: { lat: 31.2304, lng: 121.4737 },
+        },
+        destination: {
+          name: 'Los Angeles Port',
+          code: 'USLAX',
+          city: 'Los Angeles',
+          country: 'United States',
+          timezone: 'America/Los_Angeles',
+          coordinates: { lat: 33.7361, lng: -118.2922 },
+        },
+        intermediateStops: [],
+        estimatedTransitTime: 14,
+      },
+      containers: [{
+        number: trackingNumber,
+        size: '40ft',
+        type: 'HC',
+        sealNumber: 'DEMO' + Math.random().toString().substr(2, 6),
+      }],
+      vessel: {
+        name: 'Demo Vessel',
+        imo: 'IMO1234567',
+        flag: 'Panama',
+        voyage: 'DEMO001',
+        currentPosition: { lat: 35.0, lng: -140.0 },
+        eta: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      },
+    };
+
+    return {
+      provider: 'fallback-demo',
+      trackingNumber,
+      data: demoData,
+      timestamp: new Date(),
+      reliability: 0.5, // Lower reliability for demo data
+      status: 'success',
+    };
+  }
+
+  /**
+   * Enhanced fetch from provider with retry and circuit breaker
+   */
+  private async fetchFromProviderWithResilience(
+    provider: APIProviderConfig,
+    trackingNumber: string,
+    trackingType?: TrackingType
+  ): Promise<RawTrackingData> {
+    // Check circuit breaker
+    if (!this.canMakeRequest(provider.name)) {
+      throw new Error(`Circuit breaker is OPEN for ${provider.name}`);
+    }
+
+    try {
+      const result = await this.retryWithBackoff(
+        () => this.fetchFromProvider(provider, trackingNumber, trackingType),
+        3, // max retries
+        1000, // base delay
+        5000, // max delay
+        `${provider.name} API`
+      );
+
+      this.recordCircuitBreakerSuccess(provider.name);
+      return result;
+    } catch (error) {
+      this.recordCircuitBreakerFailure(provider.name);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch tracking data from multiple sources concurrently
+   * Requirement 7.1: Attempt to retrieve data from alternative APIs
+   * Requirement 7.2: Prioritize the most reliable source
+   * Requirement 7.4: Gracefully degrade when all APIs are unavailable
+   */
+  async fetchFromMultipleSourcesConcurrent(
+    trackingNumber: string, 
+    trackingType?: TrackingType,
+    userTier?: 'free' | 'premium' | 'enterprise',
+    costOptimization?: boolean,
+    maxConcurrent: number = 3
+  ): Promise<RawTrackingData[]> {
+    const cacheKey = `${trackingNumber}-${trackingType || 'auto'}`;
+    
+    // Check cache first
+    const cached = this.getCachedData(cacheKey);
+    if (cached) {
+      console.log(`📦 Cache hit for ${trackingNumber}`);
+      return [cached];
+    }
+
+    // Use smart router to determine optimal provider order
+    const routingContext: RoutingContext = {
+      trackingNumber,
+      trackingType: trackingType || 'container',
+      userTier,
+      costOptimization,
+      previousFailures: this.getRecentFailures()
+    };
+
+    const routingDecision = this.smartRouter.analyzeRouting(routingContext);
+    console.log(`🧠 Smart routing decision (concurrent): ${routingDecision.reasoning}`);
+
+    // Get providers that pass rate limit checks
+    const availableProviders = routingDecision.prioritizedProviders
+      .map(name => this.providers.get(name))
+      .filter((provider): provider is APIProviderConfig => provider !== undefined && this.checkRateLimit(provider.name))
+      .slice(0, maxConcurrent); // Limit concurrent requests
+
+    if (availableProviders.length === 0) {
+      throw new Error('No available API providers after rate limit checks');
+    }
+
+    console.log(`🚀 Starting concurrent requests to ${availableProviders.length} providers`);
+
+    // Create promises for concurrent execution
+    const providerPromises = availableProviders.map(async (provider) => {
+      try {
+        console.log(`🔍 Concurrent: Trying ${provider.name} for ${trackingNumber}`);
+        const result = await this.fetchFromProviderWithResilience(provider, trackingNumber, trackingType);
+        this.updateRateLimit(provider.name);
+        
+        if (result.status === 'success' || result.status === 'partial') {
+          this.smartRouter.recordSuccess(provider.name);
+          // Normalize data before processing
+          const normalizedResult = this.normalizeProviderData(result);
+          if (result.status === 'success') {
+            this.setCachedData(cacheKey, normalizedResult);
+          }
+          return normalizedResult;
+        } else if (result.error) {
+          this.smartRouter.recordFailure(provider.name, result.error);
+        }
+        
+        return result;
+      } catch (error) {
+        const apiError: APIError = {
+          provider: provider.name,
+          errorType: this.categorizeError(error),
+          message: error instanceof Error ? error.message : 'Unknown error',
+          statusCode: (error as any)?.response?.status
+        };
+        this.smartRouter.recordFailure(provider.name, apiError);
+        console.error(`❌ Concurrent error from ${provider.name}:`, apiError);
+        
+        return {
+          provider: provider.name,
+          trackingNumber,
+          data: null,
+          timestamp: new Date(),
+          reliability: 0,
+          status: 'error' as const,
+          error: apiError
+        };
+      }
+    });
+
+    // Execute all promises concurrently with timeout
+    const timeoutMs = 15000; // 15 second timeout for concurrent requests
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Concurrent request timeout')), timeoutMs);
+    });
+
+    try {
+      const settledResults = await Promise.race([
+        Promise.allSettled(providerPromises),
+        timeoutPromise
+      ]);
+
+      // Process results
+      const results: RawTrackingData[] = [];
+      const errors: APIError[] = [];
+
+      settledResults.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          const data = result.value;
+          if (data.status === 'success' || data.status === 'partial') {
+            results.push(data);
+          } else if (data.error) {
+            errors.push(data.error);
+          }
+        } else {
+          // Promise was rejected
+          const provider = availableProviders[index];
+          if (provider) {
+            const apiError: APIError = {
+              provider: provider.name,
+              errorType: 'NETWORK_ERROR',
+              message: result.reason?.message || 'Request failed',
+            };
+            errors.push(apiError);
+            this.smartRouter.recordFailure(provider.name, apiError);
+          }
+        }
+      });
+
+      console.log(`✅ Concurrent requests completed: ${results.length} successful, ${errors.length} failed`);
+
+      // Sort results by reliability (highest first)
+      results.sort((a, b) => b.reliability - a.reliability);
+
+      // Handle case where all APIs failed - provide fallback data
+      if (results.length === 0) {
+        console.warn(`⚠️ All concurrent API calls failed, providing fallback data`);
+        const fallbackData = this.generateFallbackData(trackingNumber, trackingType || 'container');
+        results.push(fallbackData);
+        
+        // Still log the failures for monitoring
+        this.handleAPIFailures(errors);
+      }
+
+      return results;
+
+    } catch (error) {
+      console.error('❌ Concurrent request timeout or error:', error);
+      throw new Error('All concurrent API requests failed or timed out');
+    }
+  }
+
+  /**
+   * Fetch tracking data from multiple sources with smart routing (sequential)
    * Requirement 7.1: Attempt to retrieve data from alternative APIs
    * Requirement 7.2: Prioritize the most reliable source
    * Requirement 7.4: Gracefully degrade when all APIs are unavailable
@@ -328,14 +1089,16 @@ export class APIAggregator {
         }
 
         console.log(`🔍 Smart Router: Trying ${provider.name} for ${trackingNumber}`);
-        const result = await this.fetchFromProvider(provider, trackingNumber, trackingType);
+        const result = await this.fetchFromProviderWithResilience(provider, trackingNumber, trackingType);
         
         if (result.status === 'success') {
-          results.push(result);
+          // Normalize data before processing
+          const normalizedResult = this.normalizeProviderData(result);
+          results.push(normalizedResult);
           this.smartRouter.recordSuccess(provider.name);
           
           // Cache successful results
-          this.setCachedData(cacheKey, result);
+          this.setCachedData(cacheKey, normalizedResult);
           
           // If we got a good result from a high-reliability provider, we can stop
           if (provider.reliability > 0.9) {
@@ -370,8 +1133,13 @@ export class APIAggregator {
       }
     }
 
-    // Handle case where all APIs failed (Requirement 7.4)
+    // Handle case where all APIs failed - provide fallback data (Requirement 7.4)
     if (results.length === 0) {
+      console.warn(`⚠️ All sequential API calls failed, providing fallback data`);
+      const fallbackData = this.generateFallbackData(trackingNumber, trackingType || 'container');
+      results.push(fallbackData);
+      
+      // Still log the failures for monitoring
       this.handleAPIFailures(errors);
     }
 

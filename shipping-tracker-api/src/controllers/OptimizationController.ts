@@ -54,11 +54,12 @@ export class OptimizationController {
       const { trackingNumbers, budget } = req.body;
 
       if (!Array.isArray(trackingNumbers) || trackingNumbers.length === 0) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Invalid request',
           message: 'trackingNumbers must be a non-empty array',
         });
+        return;
       }
 
       const optimization = await this.apiService.optimizeRequestOrder(trackingNumbers, budget);
@@ -86,19 +87,21 @@ export class OptimizationController {
       const userId = req.headers['user-id'] as string || req.ip;
 
       if (!Array.isArray(trackingNumbers) || trackingNumbers.length === 0) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Invalid request',
           message: 'trackingNumbers must be a non-empty array',
         });
+        return;
       }
 
       if (trackingNumbers.length > 50) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Too many requests',
           message: 'Maximum 50 tracking numbers per batch request',
         });
+        return;
       }
 
       const results = await this.apiService.batchTrackingRequests(trackingNumbers, {
@@ -163,11 +166,12 @@ export class OptimizationController {
       const { trackingNumbers } = req.body;
 
       if (!Array.isArray(trackingNumbers) || trackingNumbers.length === 0) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Invalid request',
           message: 'trackingNumbers must be a non-empty array',
         });
+        return;
       }
 
       // Start preloading asynchronously
@@ -208,11 +212,12 @@ export class OptimizationController {
         if (validNamespaces.includes(namespace.toUpperCase())) {
           clearedCount = await this.cacheService.clearNamespaceCache(namespace.toUpperCase() as any);
         } else {
-          return res.status(400).json({
+          res.status(400).json({
             success: false,
             error: 'Invalid namespace',
             message: `Valid namespaces: ${validNamespaces.join(', ')}`,
           });
+          return;
         }
       } else {
         // Clear all cache
@@ -298,11 +303,12 @@ export class OptimizationController {
       const { preferredTier, maxCost, maxResponseTime, requiresRealTime } = req.query;
 
       if (!trackingNumber) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Missing tracking number',
           message: 'trackingNumber parameter is required',
         });
+        return;
       }
 
       const criteria = {
@@ -344,11 +350,12 @@ export class OptimizationController {
       const userId = req.headers['user-id'] as string || req.ip;
 
       if (!trackingNumber) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Missing tracking number',
           message: 'trackingNumber is required',
         });
+        return;
       }
 
       const requestId = await this.optimizer.optimizeRequest({

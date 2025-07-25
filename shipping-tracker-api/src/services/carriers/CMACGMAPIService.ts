@@ -117,7 +117,7 @@ export class CMACGMAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.cma-cgm.com/tracking';
-    this.apiKey = config.apiKeys.cmaCgm;
+    this.apiKey = config.apiProviders.cmaCgm?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ CMA CGM API key not configured');

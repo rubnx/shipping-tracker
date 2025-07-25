@@ -98,7 +98,7 @@ export class VesselFinderAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.vesselfinder.com/v1';
-    this.apiKey = config.apiKeys.vesselFinder;
+    this.apiKey = config.apiProviders.vesselFinder?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ Vessel Finder API key not configured');

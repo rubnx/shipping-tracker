@@ -117,7 +117,7 @@ export class ONELineAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.one-line.com/track';
-    this.apiKey = config.apiKeys.oneLine;
+    this.apiKey = config.apiProviders.oneLine?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ ONE Line API key not configured');

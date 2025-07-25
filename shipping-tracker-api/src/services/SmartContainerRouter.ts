@@ -210,8 +210,8 @@ export class SmartContainerRouter {
     lastFailure?: Date;
   }> {
     const allProviders = Array.from(new Set([
-      ...this.providerCosts.keys(),
-      ...this.providerReliability.keys()
+      ...Array.from(this.providerCosts.keys()),
+      ...Array.from(this.providerReliability.keys())
     ]));
 
     return allProviders.map(provider => {

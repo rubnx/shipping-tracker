@@ -17,7 +17,7 @@ export interface ServiceWorkerConfig {
 
 export function registerServiceWorker(config?: ServiceWorkerConfig) {
   if ('serviceWorker' in navigator) {
-    const publicUrl = new URL(process.env.PUBLIC_URL || '', window.location.href);
+    const publicUrl = new URL(import.meta.env.PUBLIC_URL || '', window.location.href);
     if (publicUrl.origin !== window.location.origin) {
       return;
     }

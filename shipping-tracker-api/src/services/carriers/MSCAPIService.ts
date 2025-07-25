@@ -116,7 +116,7 @@ export class MSCAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.msc.com/track';
-    this.apiKey = config.apiKeys.msc;
+    this.apiKey = config.apiProviders.msc?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ MSC API key not configured');

@@ -116,7 +116,7 @@ export class HapagLloydAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.hapag-lloyd.com/tracking';
-    this.apiKey = config.apiKeys.hapagLloyd;
+    this.apiKey = config.apiProviders.hapagLloyd?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ Hapag-Lloyd API key not configured');

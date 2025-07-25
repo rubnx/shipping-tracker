@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import { z } from 'zod';
 
 // Load environment variables
@@ -244,6 +244,22 @@ export function isDemoMode(): boolean {
 // Check if mock data is enabled
 export function isMockDataEnabled(): boolean {
   return env.ENABLE_MOCK_DATA;
+}
+
+// Validate environment configuration
+export function validateEnvironment(): boolean {
+  try {
+    envSchema.parse(process.env);
+    return true;
+  } catch (error) {
+    console.error('❌ Environment validation failed:');
+    if (error instanceof z.ZodError) {
+      error.errors.forEach((err) => {
+        console.error(`  ${err.path.join('.')}: ${err.message}`);
+      });
+    }
+    return false;
+  }
 }
 
 export default config;

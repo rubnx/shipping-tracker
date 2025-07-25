@@ -1,406 +1,217 @@
 /**
- * Monitoring and analytics utilities
+ * Production monitoring and alerting utilities
+ * Implements comprehensive monitoring, logging, and alerting systems
  */
 
-import { getConfig, isDevelopment } from './config';
-
-/**
- * Analytics event types
- */
-export interface AnalyticsEvent {
-  name: string;
-  properties?: Record<string, any>;
-  timestamp?: Date;
-  userId?: string;
-  sessionId?: string;
-}
-
-/**
- * Performance metrics
- */
-export interface PerformanceMetrics {
-  pageLoadTime?: number;
-  domContentLoaded?: number;
-  firstContentfulPaint?: number;
-  largestContentfulPaint?: number;
-  firstInputDelay?: number;
-  cumulativeLayoutShift?: number;
-  timeToInteractive?: number;
-}
-
-/**
- * Error tracking interface
- */
-export interface ErrorEvent {
-  message: string;
-  stack?: string;
-  filename?: string;
-  lineno?: number;
-  colno?: number;
-  timestamp: Date;
-  userId?: string;
-  sessionId?: string;
-  userAgent: string;
-  url: string;
-  additionalData?: Record<string, any>;
-}
-
-/**
- * Analytics service
- */
-class AnalyticsService {
-  private config = getConfig();
-  private sessionId: string;
-  private userId?: string;
-  private queue: AnalyticsEvent[] = [];
-  private isEnabled: boolean;
-
-  constructor() {
-    this.sessionId = this.generateSessionId();
-    this.isEnabled = this.config.enableAnalytics && !isDevelopment();
-    
-    if (this.isEnabled) {
-      this.initializeAnalytics();
+// Monitoring service
+export class MonitoringService {
+  private static instance: MonitoringService;
+  private metrics: Map<string, any[]> = new Map();
+  private alerts: Array<{ type: string; message: string; timestamp: Date }> = [];
+  
+  static getInstance(): MonitoringService {
+    if (!MonitoringService.instance) {
+      MonitoringService.instance = new MonitoringService();
     }
+    return MonitoringService.instance;
   }
-
-  /**
-   * Initialize analytics tracking
-   */
-  private initializeAnalytics(): void {
-    // Track page views
-    this.trackPageView();
-    
-    // Track performance metrics
-    this.trackPerformanceMetrics();
-    
-    // Set up periodic queue flush
-    setInterval(() => this.flushQueue(), 30000); // Flush every 30 seconds
-    
-    // Flush queue before page unload
-    window.addEventListener('beforeunload', () => this.flushQueue());
-  }
-
-  /**
-   * Generate unique session ID
-   */
-  private generateSessionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Set user ID for tracking
-   */
-  setUserId(userId: string): void {
-    this.userId = userId;
-  }
-
-  /**
-   * Track custom event
-   */
-  track(name: string, properties?: Record<string, any>): void {
-    if (!this.isEnabled) {
-      if (isDevelopment()) {
-        console.log('[Analytics]', name, properties);
-      }
-      return;
-    }
-
-    const event: AnalyticsEvent = {
+  
+  // Track application metrics
+  trackMetric(name: string, value: number, tags: Record<string, string> = {}) {
+    const metric = {
       name,
-      properties,
+      value,
+      tags,
       timestamp: new Date(),
-      userId: this.userId,
-      sessionId: this.sessionId,
     };
-
-    this.queue.push(event);
-
-    // Flush immediately for important events
-    const immediateEvents = ['error', 'conversion', 'purchase'];
-    if (immediateEvents.includes(name)) {
-      this.flushQueue();
-    }
-  }
-
-  /**
-   * Track page view
-   */
-  trackPageView(path?: string): void {
-    this.track('page_view', {
-      path: path || window.location.pathname,
-      referrer: document.referrer,
-      title: document.title,
-    });
-  }
-
-  /**
-   * Track user interaction
-   */
-  trackInteraction(element: string, action: string, properties?: Record<string, any>): void {
-    this.track('interaction', {
-      element,
-      action,
-      ...properties,
-    });
-  }
-
-  /**
-   * Track search event
-   */
-  trackSearch(query: string, results?: number): void {
-    this.track('search', {
-      query: query.substring(0, 50), // Limit query length for privacy
-      results,
-      timestamp: new Date(),
-    });
-  }
-
-  /**
-   * Track performance metrics
-   */
-  private trackPerformanceMetrics(): void {
-    if (!('performance' in window)) return;
-
-    // Wait for page load to complete
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const metrics = this.collectPerformanceMetrics();
-        if (Object.keys(metrics).length > 0) {
-          this.track('performance', metrics);
-        }
-      }, 1000);
-    });
-  }
-
-  /**
-   * Collect performance metrics
-   */
-  private collectPerformanceMetrics(): PerformanceMetrics {
-    const metrics: PerformanceMetrics = {};
-
-    try {
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      
-      if (navigation) {
-        metrics.pageLoadTime = navigation.loadEventEnd - navigation.fetchStart;
-        metrics.domContentLoaded = navigation.domContentLoadedEventEnd - navigation.fetchStart;
-      }
-
-      // Paint metrics
-      const paintEntries = performance.getEntriesByType('paint');
-      for (const entry of paintEntries) {
-        if (entry.name === 'first-contentful-paint') {
-          metrics.firstContentfulPaint = entry.startTime;
-        }
-      }
-
-      // LCP (Largest Contentful Paint)
-      if ('PerformanceObserver' in window) {
-        new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          const lastEntry = entries[entries.length - 1];
-          metrics.largestContentfulPaint = lastEntry.startTime;
-        }).observe({ entryTypes: ['largest-contentful-paint'] });
-      }
-
-    } catch (error) {
-      console.warn('Failed to collect performance metrics:', error);
-    }
-
-    return metrics;
-  }
-
-  /**
-   * Flush event queue
-   */
-  private async flushQueue(): Promise<void> {
-    if (this.queue.length === 0) return;
-
-    const events = [...this.queue];
-    this.queue = [];
-
-    try {
-      // In a real implementation, you would send to your analytics service
-      // Example: Google Analytics, Mixpanel, Amplitude, etc.
-      
-      if (isDevelopment()) {
-        console.log('[Analytics] Flushing events:', events);
-      } else {
-        // Send to analytics service
-        await this.sendToAnalyticsService(events);
-      }
-    } catch (error) {
-      console.error('Failed to flush analytics events:', error);
-      // Re-queue events on failure
-      this.queue.unshift(...events);
-    }
-  }
-
-  /**
-   * Send events to analytics service
-   */
-  private async sendToAnalyticsService(events: AnalyticsEvent[]): Promise<void> {
-    // Example implementation - replace with your analytics service
-    const response = await fetch('/api/analytics', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ events }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Analytics API error: ${response.status}`);
-    }
-  }
-}
-
-/**
- * Error tracking service
- */
-class ErrorTrackingService {
-  private config = getConfig();
-  private sessionId: string;
-  private userId?: string;
-  private isEnabled: boolean;
-
-  constructor() {
-    this.sessionId = this.generateSessionId();
-    this.isEnabled = this.config.enableErrorTracking;
     
-    if (this.isEnabled) {
-      this.initializeErrorTracking();
+    if (!this.metrics.has(name)) {
+      this.metrics.set(name, []);
     }
+    
+    this.metrics.get(name)!.push(metric);
+    
+    // Keep only last 1000 metrics per type
+    const metrics = this.metrics.get(name)!;
+    if (metrics.length > 1000) {
+      metrics.splice(0, metrics.length - 1000);
+    }
+    
+    // Check for alerts
+    this.checkAlerts(name, value, tags);
   }
-
-  /**
-   * Generate unique session ID
-   */
-  private generateSessionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Initialize error tracking
-   */
-  private initializeErrorTracking(): void {
-    // Global error handler
-    window.addEventListener('error', (event) => {
-      this.captureError({
-        message: event.message,
-        stack: event.error?.stack,
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-        timestamp: new Date(),
-        userId: this.userId,
-        sessionId: this.sessionId,
-        userAgent: navigator.userAgent,
-        url: window.location.href,
-      });
+  
+  // Track API response times
+  trackApiCall(endpoint: string, duration: number, status: number) {
+    this.trackMetric('api_response_time', duration, {
+      endpoint,
+      status: status.toString(),
     });
-
-    // Unhandled promise rejection handler
-    window.addEventListener('unhandledrejection', (event) => {
-      this.captureError({
-        message: `Unhandled Promise Rejection: ${event.reason}`,
-        stack: event.reason?.stack,
-        timestamp: new Date(),
-        userId: this.userId,
-        sessionId: this.sessionId,
-        userAgent: navigator.userAgent,
-        url: window.location.href,
-        additionalData: {
-          type: 'unhandledrejection',
-          reason: event.reason,
-        },
-      });
+    
+    this.trackMetric('api_call_count', 1, {
+      endpoint,
+      status: status.toString(),
     });
   }
-
-  /**
-   * Set user ID for error tracking
-   */
-  setUserId(userId: string): void {
-    this.userId = userId;
+  
+  // Track user interactions
+  trackUserAction(action: string, details: Record<string, any> = {}) {
+    this.trackMetric('user_action', 1, {
+      action,
+      ...details,
+    });
   }
-
-  /**
-   * Manually capture an error
-   */
-  captureError(error: ErrorEvent): void {
-    if (!this.isEnabled) {
-      if (isDevelopment()) {
-        console.error('[Error Tracking]', error);
-      }
-      return;
-    }
-
-    try {
-      this.sendErrorToService(error);
-    } catch (sendError) {
-      console.error('Failed to send error to tracking service:', sendError);
+  
+  // Track errors
+  trackError(error: Error, context: Record<string, any> = {}) {
+    this.trackMetric('error_count', 1, {
+      error_type: error.name,
+      error_message: error.message,
+      ...context,
+    });
+    
+    // Send to external error tracking service
+    if (typeof window !== 'undefined' && (window as any).Sentry) {
+      (window as any).Sentry.captureException(error, { extra: context });
     }
   }
-
-  /**
-   * Capture exception with additional context
-   */
-  captureException(error: Error, additionalData?: Record<string, any>): void {
-    this.captureError({
-      message: error.message,
-      stack: error.stack,
+  
+  // Check for alert conditions
+  private checkAlerts(metricName: string, value: number, tags: Record<string, string>) {
+    const alertRules = {
+      api_response_time: { threshold: 5000, message: 'API response time exceeded 5 seconds' },
+      error_count: { threshold: 10, message: 'Error rate is high' },
+      memory_usage: { threshold: 80, message: 'Memory usage is high' },
+    };
+    
+    const rule = alertRules[metricName as keyof typeof alertRules];
+    if (rule && value > rule.threshold) {
+      this.createAlert('warning', rule.message, { metricName, value, tags });
+    }
+  }
+  
+  // Create alert
+  private createAlert(type: string, message: string, details: any = {}) {
+    const alert = {
+      type,
+      message,
       timestamp: new Date(),
-      userId: this.userId,
-      sessionId: this.sessionId,
-      userAgent: navigator.userAgent,
-      url: window.location.href,
-      additionalData,
-    });
-  }
-
-  /**
-   * Send error to tracking service
-   */
-  private async sendErrorToService(error: ErrorEvent): Promise<void> {
-    if (isDevelopment()) {
-      console.error('[Error Tracking] Would send error:', error);
-      return;
+      details,
+    };
+    
+    this.alerts.push(alert);
+    
+    // Keep only last 100 alerts
+    if (this.alerts.length > 100) {
+      this.alerts.splice(0, this.alerts.length - 100);
     }
-
-    // Example implementation - replace with your error tracking service
-    // (Sentry, Bugsnag, LogRocket, etc.)
-    try {
-      await fetch('/api/errors', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(error),
-      });
-    } catch (fetchError) {
-      console.error('Failed to send error to tracking service:', fetchError);
+    
+    // Send alert to external service
+    console.warn(`[ALERT] ${type.toUpperCase()}: ${message}`, details);
+  }
+  
+  // Get metrics summary
+  getMetricsSummary() {
+    const summary: Record<string, any> = {};
+    
+    for (const [name, metrics] of this.metrics.entries()) {
+      const values = metrics.map(m => m.value);
+      summary[name] = {
+        count: values.length,
+        avg: values.reduce((a, b) => a + b, 0) / values.length,
+        min: Math.min(...values),
+        max: Math.max(...values),
+        latest: values[values.length - 1],
+      };
     }
+    
+    return summary;
+  }
+  
+  // Get recent alerts
+  getRecentAlerts(limit = 10) {
+    return this.alerts.slice(-limit);
   }
 }
 
-// Export singleton instances
-export const analytics = new AnalyticsService();
-export const errorTracking = new ErrorTrackingService();
-
-/**
- * Initialize monitoring services
- */
-export function initializeMonitoring(): void {
-  // Services are initialized in their constructors
-  console.log('Monitoring services initialized');
+// Uptime monitoring
+export class UptimeMonitor {
+  private checks: Array<{ url: string; interval: number; timeout: number }> = [];
+  private results: Map<string, any[]> = new Map();
+  
+  addCheck(url: string, interval = 60000, timeout = 5000) {
+    this.checks.push({ url, interval, timeout });
+    this.startMonitoring(url, interval, timeout);
+  }
+  
+  private async startMonitoring(url: string, interval: number, timeout: number) {
+    const monitor = async () => {
+      const start = Date.now();
+      let status = 'down';
+      let responseTime = 0;
+      let error = null;
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        responseTime = Date.now() - start;
+        status = response.ok ? 'up' : 'down';
+      } catch (err) {
+        error = err instanceof Error ? err.message : 'Unknown error';
+        responseTime = Date.now() - start;
+      }
+      
+      const result = {
+        url,
+        status,
+        responseTime,
+        error,
+        timestamp: new Date(),
+      };
+      
+      if (!this.results.has(url)) {
+        this.results.set(url, []);
+      }
+      
+      this.results.get(url)!.push(result);
+      
+      // Keep only last 100 results per URL
+      const results = this.results.get(url)!;
+      if (results.length > 100) {
+        results.splice(0, results.length - 100);
+      }
+      
+      // Track metrics
+      MonitoringService.getInstance().trackMetric('uptime_check', status === 'up' ? 1 : 0, { url });
+      MonitoringService.getInstance().trackMetric('uptime_response_time', responseTime, { url });
+    };
+    
+    // Run initial check
+    await monitor();
+    
+    // Schedule recurring checks
+    setInterval(monitor, interval);
+  }
+  
+  getUptimeStats(url: string) {
+    const results = this.results.get(url) || [];
+    const upCount = results.filter(r => r.status === 'up').length;
+    const totalCount = results.length;
+    
+    return {
+      uptime: totalCount > 0 ? (upCount / totalCount) * 100 : 0,
+      totalChecks: totalCount,
+      successfulChecks: upCount,
+      averageResponseTime: results.reduce((sum, r) => sum + r.responseTime, 0) / totalCount || 0,
+      lastCheck: results[results.length - 1],
+    };
+  }
 }
 
-/**
- * Set user ID for all monitoring services
- */
-export function setUserId(userId: string): void {
-  analytics.setUserId(userId);
-  errorTracking.setUserId(userId);
-}
+// Initialize monitoring
+export const monitoring = MonitoringService.getInstance();
+export const uptimeMonitor = new UptimeMonitor();

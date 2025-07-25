@@ -295,8 +295,9 @@ describe('Container API Performance Monitoring', () => {
       // Error rate should be reasonable for external APIs
       expect(errorRate).toBeLessThan(0.8); // Less than 80% error rate
     }, 180000);
+  });
 
-    categorizeError(error: string): string {
+  function categorizeError(error: string): string {
       if (error.includes('timeout')) return 'TIMEOUT';
       if (error.includes('rate limit')) return 'RATE_LIMIT';
       if (error.includes('not found')) return 'NOT_FOUND';
@@ -304,6 +305,5 @@ describe('Container API Performance Monitoring', () => {
       if (error.includes('network')) return 'NETWORK_ERROR';
       if (error.includes('server')) return 'SERVER_ERROR';
       return 'UNKNOWN_ERROR';
-    }
-  });
+  }
 });

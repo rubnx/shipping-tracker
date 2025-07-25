@@ -116,7 +116,7 @@ export class MaerskAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.maersk.com/track';
-    this.apiKey = config.apiKeys.maersk;
+    this.apiKey = config.apiProviders.maersk?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ Maersk API key not configured');

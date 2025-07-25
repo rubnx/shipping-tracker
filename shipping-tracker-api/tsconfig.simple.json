@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/simple-index.ts",
+    "src/config/environment.ts",
+    "src/services/APIAggregator.ts",
+    "src/types/index.ts"
+  ],
+  "exclude": [
+    "src/test/**/*",
+    "src/controllers/**/*",
+    "src/routes/**/*",
+    "src/middleware/**/*",
+    "src/services/!(APIAggregator).ts"
+  ]
+}

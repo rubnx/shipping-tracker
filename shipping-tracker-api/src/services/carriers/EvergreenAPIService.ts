@@ -117,7 +117,7 @@ export class EvergreenAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.evergreen-line.com/track';
-    this.apiKey = config.apiKeys.evergreen;
+    this.apiKey = config.apiProviders.evergreen?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ Evergreen API key not configured');

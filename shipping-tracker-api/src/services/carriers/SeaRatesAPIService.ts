@@ -127,7 +127,7 @@ export class SeaRatesAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.searates.com/tracking';
-    this.apiKey = config.apiKeys.searates;
+    this.apiKey = config.apiProviders.seaRates?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ SeaRates API key not configured');

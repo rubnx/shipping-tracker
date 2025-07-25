@@ -60,8 +60,7 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// Sentry request handler (must be first)
-app.use(Sentry.Handlers.requestHandler());
+// Sentry middleware is now handled by the integration
 
 // Security headers
 app.use(securityHeaders);
@@ -196,8 +195,7 @@ app.use('*', (req, res) => {
   });
 });
 
-// Sentry error handler (must be before other error handlers)
-app.use(Sentry.Handlers.errorHandler());
+// Sentry error handling is now handled by the integration
 
 // Performance monitoring error middleware
 app.use(performanceMonitor.errorMiddleware());

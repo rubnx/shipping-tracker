@@ -1,4 +1,4 @@
-import { ShipmentTracking, TimelineEvent, Container, VesselInfo, RouteInfo, Port } from '../types';
+import { ShipmentData, TimelineEvent, Container, VesselInfo, RouteInfo, Port, Dimensions } from '../types';
 
 /**
  * Mock data service for demo mode and testing
@@ -170,7 +170,7 @@ export class MockDataService {
   /**
    * Generate mock shipment data
    */
-  static generateMockShipment(trackingNumber: string): ShipmentTracking {
+  static generateMockShipment(trackingNumber: string): ShipmentData {
     const hash = this.hashString(trackingNumber);
     const carrierIndex = hash % this.MOCK_CARRIERS.length;
     const vesselIndex = hash % this.MOCK_VESSELS.length;
@@ -198,7 +198,6 @@ export class MockDataService {
     const currentStatus = statusSpecific?.status || this.getCurrentStatus(timeline);
 
     return {
-      id: `mock-${trackingNumber.toLowerCase()}`,
       trackingNumber: trackingNumber.toUpperCase(),
       trackingType: this.detectTrackingType(trackingNumber),
       carrier,
@@ -210,6 +209,7 @@ export class MockDataService {
       vessel,
       lastUpdated: new Date(),
       dataSource: 'Mock Data Service (Demo Mode)',
+      reliability: 0.95, // High reliability for demo data
     };
   }
 
@@ -273,6 +273,7 @@ export class MockDataService {
           length: 20,
           width: 8,
           height: 8.5,
+          unit: 'ft' as const,
         },
       });
     }
@@ -476,7 +477,7 @@ export class MockDataService {
   /**
    * Generate status-specific mock data
    */
-  static generateStatusSpecificMockData(trackingNumber: string): Partial<ShipmentTracking> | null {
+  static generateStatusSpecificMockData(trackingNumber: string): Partial<ShipmentData> | null {
     const upper = trackingNumber.toUpperCase();
     
     if (upper.includes('DELIVERED')) {

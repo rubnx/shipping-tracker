@@ -1,0 +1,3 @@
+packages:
+  - 'shipping-tracker'
+  - 'shipping-tracker-api'

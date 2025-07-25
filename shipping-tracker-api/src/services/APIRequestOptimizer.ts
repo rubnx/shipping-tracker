@@ -1,5 +1,5 @@
 import { TrackingCacheService } from './TrackingCacheService';
-import { APIMonitoringService } from './APIMonitoringService';
+// import { APIMonitoringService } from './APIMonitoringService'; // Temporarily disabled
 import { config, apiProviders } from '../config/environment';
 import { EventEmitter } from 'events';
 
@@ -221,7 +221,7 @@ export class APIRequestOptimizer extends EventEmitter {
   /**
    * Process the request queue
    */
-  private async processRequestQueue(): void {
+  private async processRequestQueue(): Promise<void> {
     if (this.activeBatches.size >= this.batchConfig.maxConcurrentBatches) {
       return; // Too many active batches
     }
@@ -381,7 +381,7 @@ export class APIRequestOptimizer extends EventEmitter {
 
     // Base score by tier (free = 30, freemium = 20, premium = 10 for cost optimization)
     const tierScores = { free: 30, freemium: 20, premium: 10 };
-    score += tierScores[provider.tier] || 0;
+    score += tierScores[provider.tier as keyof typeof tierScores] || 0;
 
     // Health status score
     const healthStatus = this.monitoringService.getProviderHealthStatus(provider.name);

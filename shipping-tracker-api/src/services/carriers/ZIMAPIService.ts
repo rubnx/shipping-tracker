@@ -128,7 +128,7 @@ export class ZIMAPIService {
 
   constructor() {
     this.baseUrl = 'https://api.zim.com/tracking';
-    this.apiKey = config.apiKeys.zim;
+    this.apiKey = config.apiProviders.zim?.apiKey || '';
     
     if (!this.apiKey) {
       console.warn('⚠️ ZIM API key not configured');
